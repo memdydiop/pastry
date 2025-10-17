@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -58,16 +59,23 @@ class UserProfile extends Model
 
     /**
      * Accesseur pour obtenir l'URL complète de l'avatar.
+     * Le résultat est mis en cache pour améliorer les performances.
      */
     public function avatarUrl(): Attribute
     {
         return Attribute::get(function () {
-            // Si un avatar est défini, retourne son URL via le disque 'public'.
-            // Sinon, retourne une URL par défaut depuis ui-avatars.com.
-            return $this->avatar
-                ? Storage::url(auth()->user()->profile->avatar)
-                : 'https://ui-avatars.com/api/?name=' . urlencode($this->initials() ?: 'P') . '&background=random';
+            // Clé de cache unique pour l'avatar de cet utilisateur.
+            $cacheKey = 'user:' . $this->user_id . ':avatar_url';
+
+            // On garde le résultat en cache pendant 1 heure (3600 secondes).
+            return Cache::remember($cacheKey, 3600, function () {
+                // Si un avatar est défini, retourne son URL via le disque 'public'.
+                // Sinon, retourne une URL par défaut depuis ui-avatars.com.
+                return $this->avatar
+                    ? Storage::disk('public')->url($this->avatar)
+                    : 'https://ui-avatars.com/api/?name=' . urlencode($this->initials() ?: 'P') . '&background=random';
+            });
         });
     }
 }
-//Storage::url(auth()->user()->profile->photo)
+
