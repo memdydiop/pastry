@@ -48,7 +48,9 @@ new class extends Component {
             DB::beginTransaction();
 
             $profile = auth()->user()->profile;
-            $oldAvatarPath = $profile->avatar_path;
+            $oldAvatarPath = $profile->getAvatarPathAttribute();
+
+            $newAvatarPath = null; 
 
             // Gestion de l'upload du nouvel avatar
             if ($this->form->avatar) {
