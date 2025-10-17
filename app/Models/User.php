@@ -37,13 +37,7 @@ class User extends Authenticatable
         'two_factor_secret',
         'two_factor_recovery_codes',
         'remember_token',
-    ];/**
-     * Obtenir le profil associé à l'utilisateur.
-     */
-    public function profile(): HasOne
-    {
-        return $this->hasOne(UserProfile::class);
-    }
+    ];
 
     /**
      * Get the attributes that should be cast.
@@ -59,5 +53,46 @@ class User extends Authenticatable
         ];
     }
 
-    
+    /**
+     * Obtenir le profil associé à l'utilisateur.
+     */
+    public function profile(): HasOne
+    {
+        return $this->hasOne(UserProfile::class);
+    }
+
+    /**
+     * Délégué pour obtenir le nom à afficher.
+     */
+    public function getNameAttribute(): string
+    {
+        return $this->profile?->full_name ?? $this->email;
+    }
+
+    /**
+     * Délégué pour obtenir l'URL de la photo de profil.
+     */
+    public function getAvatarAttribute(): string
+    {
+        return $this->profile?->avatar_url ?? '';
+    }
+
+    /**
+     * Délégué pour obtenir les initiales.
+     * C'est le point d'accès unique pour toute l'application.
+     */
+    public function initials(): string
+    {
+        // Si le profil existe, on lui demande de calculer les initiales.
+        if ($this->profile?->full_name) {
+            return $this->profile->initials();
+        }
+
+        // Sinon, solution de repli : on calcule les initiales à partir de l'email.
+        return Str::of($this->email)
+            ->explode('@')
+            ->first()
+            ->substr(0, 2)
+            ->upper();
+    }
 }

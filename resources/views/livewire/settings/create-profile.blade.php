@@ -1,57 +1,36 @@
 <?php
 
+use App\Livewire\Forms\ProfileForm;
 use Livewire\Attributes\Layout;
+use App\Http\Requests\StoreUserProfileRequest; 
 use Livewire\Volt\Component;
 use Livewire\WithFileUploads;
-use Illuminate\Support\Facades\Auth;
 
 new #[Layout('components.layouts.auth')]
     class extends Component {
+
     use WithFileUploads;
-    public string $full_name = '';
-    public string $date_of_birth = '';
-    public string $phone = '';
-    public string $address = '';
-    public string $city = '';
-    public string $country = '';
-    public string $bio = '';
-    public $avatar;
+    
+    // Déclarez une seule propriété pour le formulaire.
+    public ProfileForm $form;
 
     public function saveProfile()
     {
-        
-        $validated = $this->validate([
-            'full_name' => ['required', 'string', 'max:255'],
-            'date_of_birth' => ['required', 'date', 'before:today', 'after:' . now()->subYears(120)->format('Y-m-d')],
-            'phone' => ['required', 'string', 'max:20'],
-            'address' => ['required', 'string', 'max:255'],
-            'city' => ['required', 'string', 'max:255'],
-            'country' => ['required', 'string', 'max:255'],
-            'bio' => ['nullable', 'string', 'max:255'],
-            'avatar' => ['nullable', 'image', 'max:2048'],
-        ]);
+        // Validez et récupérez les données en un seul appel !
+        $data = $this->form->validate();
 
-        if ($this->date_of_birth) {
-            $this->date_of_birth = \Carbon\Carbon::createFromFormat('d-m-Y', $this->date_of_birth);
+        // Si un avatar est téléchargé, on le stocke
+        if ($this->form->avatar) {
+            $data['avatar'] = $this->form->avatar->store('avatars', 'public');
         }
 
-        // Handle avatar upload
-        if ($this->avatar) {
-            $validated['avatar'] = $this->avatar->store('avatars', 'public');
-        }
-        
-        // Utilise updateOrCreate pour plus de robustesse
-        Auth::user()->profile()->updateOrCreate(
-            ['user_id' => Auth::id()], // Condition de recherche
-            $validated // Données à insérer ou à mettre à jour
-        );
+        // Crée le profil de l'utilisateur
+        auth()->user()->profile()->create($data);
 
+        // Met à jour le statut de l'utilisateur
+        auth()->user()->update(['profile_completed' => true]);
 
-        Auth::user()->update(['profile_completed' => true]);
-
-        $this->dispatch('profile-saved');
-        
-        // Redirige l'utilisateur vers le tableau de bord ou la page d'accueil
+        // Redirige vers le tableau de bord
         return $this->redirect(route('dashboard'), navigate: true);
     }
 }; ?>
@@ -68,7 +47,7 @@ new #[Layout('components.layouts.auth')]
 
         <!-- Full_name -->
         <flux:input 
-            wire:model="full_name" 
+            wire:model="form.full_name" 
             :label="__('Nom et Pénoms')" 
             name="full_name"
             type="text" required autofocus
@@ -76,7 +55,7 @@ new #[Layout('components.layouts.auth')]
 
         <!-- Date of Birth -->
         <flux:input 
-            wire:model="date_of_birth" 
+            wire:model="form.date_of_birth" 
             :label="__('Date de naissance')" 
             name="date_of_birth"
             type="date"
@@ -84,7 +63,7 @@ new #[Layout('components.layouts.auth')]
 
         <!-- Phone -->
         <flux:input 
-            wire:model="phone" 
+            wire:model="form.phone" 
             :label="__('Téléphone')" 
             name="phone"
             type="tel"
@@ -92,7 +71,7 @@ new #[Layout('components.layouts.auth')]
 
         <!-- Address -->
         <flux:input 
-            wire:model="address" 
+            wire:model="form.address" 
             :label="__('Adresse')" 
             name="address"
             type="text"
@@ -100,7 +79,7 @@ new #[Layout('components.layouts.auth')]
 
         <!-- City -->
         <flux:input 
-            wire:model="city" 
+            wire:model="form.city" 
             :label="__('Ville')" 
             name="city"
             type="text"
@@ -108,7 +87,7 @@ new #[Layout('components.layouts.auth')]
 
         <!-- Country -->
         <flux:input 
-            wire:model="country" 
+            wire:model="form.country" 
             :label="__('Pays')" 
             name="country"
             type="text"
@@ -116,7 +95,7 @@ new #[Layout('components.layouts.auth')]
 
         <!-- Bio -->
         <flux:textarea 
-            wire:model="bio" 
+            wire:model="form.bio" 
             :label="__('Biographie')" 
             name="bio"
             rows="4"
@@ -129,7 +108,7 @@ new #[Layout('components.layouts.auth')]
             </label>
             <input 
                 type="file" 
-                wire:model="avatar" 
+                wire:model="form.avatar" 
                 name="avatar"
                 id="avatar"
                 accept="image/*"

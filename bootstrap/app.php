@@ -11,15 +11,6 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-
-        //$middleware->web(append: [
-        //    // ... autres middlewares
-        //    \App\Http\Middleware\ProfileCompleted::class, // <-- Ajoutez votre middleware ici
-        //]);
-
-        //$middleware->alias([
-        //    'profile.completed' => \App\Http\Middleware\ProfileCompleted::class,
-        //]);
         
         $middleware->alias([
             'profile.completed' => \App\Http\Middleware\EnsureProfileIsCompleted::class,

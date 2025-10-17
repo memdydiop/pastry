@@ -36,8 +36,10 @@
 
         <!-- Desktop User Menu -->
         <flux:dropdown class="hidden lg:block" position="bottom" align="start">
-            <flux:profile :name="auth()->user()->profile->full_name"
-                :initials="auth()->user()->profile->initials()" icon:trailing="chevrons-up-down"
+            <flux:profile 
+                :name="auth()->user()->name"
+                :avatar="auth()->user()->avatar"
+                :initials="auth()->user()->initials()" icon:trailing="chevrons-up-down"
                 data-test="sidebar-menu-button" />
 
             <flux:menu class="w-[220px]">
@@ -47,19 +49,19 @@
                             <span class="relative flex h-8 w-8 shrink-0 overflow-hidden rounded">
                                 <span
                                     class="flex h-full w-full items-center justify-center rounded bg-neutral-200 text-black">
-                                    {{ auth()->user()->profile->initials() }}
+                                    {{ auth()->user()->initials() }}
                                 </span>
                             </span>
 
                             <div class="grid flex-1 text-start text-sm leading-tight">
-                                <span class="truncate font-semibold">{{ auth()->user()->profile->full_name }}</span>
+                                {{-- <span class="truncate font-semibold">{{ auth()->user()->name }}</span> --}}
                                 <span class="truncate text-xs">{{ auth()->user()->email }}</span>
                             </div>
                         </div>
                     </div>
                 </flux:menu.radio.group>
 
-                <flux:menu.separator />
+                <flux:menu.separator /> 
 
                 <flux:menu.radio.group>
                     <flux:menu.item :href="route('profile.edit')" icon="cog" wire:navigate>{{ __('Settings') }}
@@ -86,9 +88,10 @@
         <flux:spacer />
 
         <flux:dropdown position="top" align="end">
-            <flux:profile 
-            :initials="auth()->user()->profile->initials()"
-            :name="auth()->user()->profile->full_name"
+            <flux:profile class="bg-sidebar-bg! hover:bg-sidebar-bg! focus:bg-sidebar-bg!"
+            :avatar="auth()->user()->avatar"
+            :initials="auth()->user()->initials()"
+            :name="auth()->user()->name"
             icon-trailing="chevron-down" />
 
             <flux:menu>
@@ -98,12 +101,12 @@
                             <span class="relative flex h-8 w-8 shrink-0 overflow-hidden rounded-lg">
                                 <span
                                     class="flex h-full w-full items-center justify-center rounded-lg bg-neutral-200 text-black">
-                                    {{ auth()->user()->profile->initials() }}
+                                    {{ auth()->user()->initials() }}
                                 </span>
                             </span>
 
                             <div class="grid flex-1 text-start text-sm leading-tight">
-                                <span class="truncate font-semibold">{{ auth()->user()->profile->full_name }}</span>
+                                <span class="truncate font-semibold">{{ auth()->user()->full_name }}</span>
                                 <span class="truncate text-xs">{{ auth()->user()->email }}</span>
                             </div>
                         </div>
