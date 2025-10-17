@@ -19,7 +19,7 @@ new #[Layout('components.layouts.auth')]
 
     public function saveProfile()
     {
-        //dd('La méthode saveProfile est bien appelée !'); // <-- AJOUTEZ CECI
+        
         $validated = $this->validate([
             'full_name' => ['required', 'string', 'max:255'],
             'date_of_birth' => ['required', 'date', 'before:today', 'after:' . now()->subYears(120)->format('Y-m-d')],
@@ -30,27 +30,26 @@ new #[Layout('components.layouts.auth')]
             'bio' => ['nullable', 'string', 'max:255'],
             'avatar' => ['nullable', 'image', 'max:2048'],
         ]);
-        //dd($validated); // <-- AJOUTEZ CECI
 
+        if ($this->date_of_birth) {
+            $this->date_of_birth = \Carbon\Carbon::createFromFormat('d-m-Y', $this->date_of_birth);
+        }
 
-        //if ($this->date_of_birth) {
-        //    $profile->date_of_birth = \Carbon\Carbon::createFromFormat('d-m-Y', $this->date_of_birth);
-        //}// Handle avatar upload
         // Handle avatar upload
         if ($this->avatar) {
             $validated['avatar'] = $this->avatar->store('avatars', 'public');
-
         }
         
         // Utilise updateOrCreate pour plus de robustesse
-        Auth::user()->userProfile()->updateOrCreate(
+        Auth::user()->profile()->updateOrCreate(
             ['user_id' => Auth::id()], // Condition de recherche
             $validated // Données à insérer ou à mettre à jour
         );
 
 
-        //$profile->save();
         Auth::user()->update(['profile_completed' => true]);
+
+        $this->dispatch('profile-saved');
         
         // Redirige l'utilisateur vers le tableau de bord ou la page d'accueil
         return $this->redirect(route('dashboard'), navigate: true);

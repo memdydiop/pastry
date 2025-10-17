@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Str;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Support\Facades\Storage;
 
 class UserProfile extends Model
@@ -22,6 +23,15 @@ class UserProfile extends Model
         'bio',
         'avatar',
     ];
+    
+    /**
+    * The attributes that should be cast.
+    *
+    * @var array
+    */
+   protected $casts = [
+       'date_of_birth' => 'date', // Ajouté pour caster la date
+   ];
 
     public function user():BelongsTo
     {
@@ -55,5 +65,17 @@ class UserProfile extends Model
             ->take(2)
             ->map(fn ($word) => Str::substr($word, 0, 1))
             ->implode('');
+    }/**
+     * Accesseur pour obtenir l'URL complète de l'avatar.
+     */
+    public function avatarUrl(): Attribute
+    {
+        return Attribute::get(function () {
+            // Si un avatar est défini, retourne son URL via le disque 'public'.
+            // Sinon, retourne une URL par défaut (par exemple, depuis ui-avatars.com).
+            return $this->avatar
+                ? Storage::disk('public')->url($this->avatar)
+                : 'https://ui-avatars.com/api/?name=' . urlencode($this->initials()) . '&background=random';
+        });
     }
 }

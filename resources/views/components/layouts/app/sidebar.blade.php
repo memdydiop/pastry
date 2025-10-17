@@ -36,8 +36,8 @@
 
         <!-- Desktop User Menu -->
         <flux:dropdown class="hidden lg:block" position="bottom" align="start">
-            <flux:profile :name="auth()->user()->userProfile->full_name"
-                :initials="auth()->user()->userProfile->initials()" icon:trailing="chevrons-up-down"
+            <flux:profile :name="auth()->user()->profile->full_name"
+                :initials="auth()->user()->profile->initials()" icon:trailing="chevrons-up-down"
                 data-test="sidebar-menu-button" />
 
             <flux:menu class="w-[220px]">
@@ -47,12 +47,12 @@
                             <span class="relative flex h-8 w-8 shrink-0 overflow-hidden rounded">
                                 <span
                                     class="flex h-full w-full items-center justify-center rounded bg-neutral-200 text-black">
-                                    {{ auth()->user()->userProfile->initials() }}
+                                    {{ auth()->user()->profile->initials() }}
                                 </span>
                             </span>
 
                             <div class="grid flex-1 text-start text-sm leading-tight">
-                                <span class="truncate font-semibold">{{ auth()->user()->userProfile->full_name }}</span>
+                                <span class="truncate font-semibold">{{ auth()->user()->profile->full_name }}</span>
                                 <span class="truncate text-xs">{{ auth()->user()->email }}</span>
                             </div>
                         </div>
@@ -87,8 +87,8 @@
 
         <flux:dropdown position="top" align="end">
             <flux:profile 
-            :initials="auth()->user()->userProfile->initials()"
-            :name="auth()->user()->userProfile->full_name"
+            :initials="auth()->user()->profile->initials()"
+            :name="auth()->user()->profile->full_name"
             icon-trailing="chevron-down" />
 
             <flux:menu>
@@ -98,12 +98,12 @@
                             <span class="relative flex h-8 w-8 shrink-0 overflow-hidden rounded-lg">
                                 <span
                                     class="flex h-full w-full items-center justify-center rounded-lg bg-neutral-200 text-black">
-                                    {{ auth()->user()->userProfile->initials() }}
+                                    {{ auth()->user()->profile->initials() }}
                                 </span>
                             </span>
 
                             <div class="grid flex-1 text-start text-sm leading-tight">
-                                <span class="truncate font-semibold">{{ auth()->user()->userProfile->full_name }}</span>
+                                <span class="truncate font-semibold">{{ auth()->user()->profile->full_name }}</span>
                                 <span class="truncate text-xs">{{ auth()->user()->email }}</span>
                             </div>
                         </div>

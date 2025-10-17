@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\Response;
 
-class ProfileCompleted
+class EnsureProfileIsCompleted
 {
     /**
      * Handle an incoming request.
@@ -16,19 +16,30 @@ class ProfileCompleted
      */
     public function handle(Request $request, Closure $next): Response
     {
-        // On vérifie si l'utilisateur est connecté ET s'il n'a PAS de profil
-        // ET qu'il n'est pas déjà sur la page de création de profil (pour éviter une boucle infinie).
-        if (Auth::check() && 
-            !Auth::user()->profile_completed && 
-            !$request->routeIs('profile.create') &&
-            !$request->routeIs('logout') &&
-            !$request->routeIs('verification.*') &&
-            !$request->routeIs('livewire*')) {
-            // Redirige l'utilisateur vers la page de création de profil
+        $user = Auth::user();
+
+        if (! $user) {
+            return $next($request);
+        }
+
+        $profileIsComplete = $user->profile_completed;
+
+        // Routes à exclure de la redirection
+        $excludedRoutes = [
+            'profile.create',
+            'logout',
+            'verification.*',
+            'livewire.*',
+        ];
+
+        $isExcludedRoute = $request->routeIs($excludedRoutes);
+
+        if (! $profileIsComplete && ! $isExcludedRoute) {
             return redirect()
                 ->route('profile.create')
                 ->with('warning', 'Veuillez compléter votre profil pour continuer.');
         }
+
         return $next($request);
     }
 }

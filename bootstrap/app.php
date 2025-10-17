@@ -17,8 +17,12 @@ return Application::configure(basePath: dirname(__DIR__))
         //    \App\Http\Middleware\ProfileCompleted::class, // <-- Ajoutez votre middleware ici
         //]);
 
+        //$middleware->alias([
+        //    'profile.completed' => \App\Http\Middleware\ProfileCompleted::class,
+        //]);
+        
         $middleware->alias([
-            'profile.completed' => \App\Http\Middleware\ProfileCompleted::class,
+            'profile.completed' => \App\Http\Middleware\EnsureProfileIsCompleted::class,
         ]);
 
         //

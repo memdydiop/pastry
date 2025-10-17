@@ -40,7 +40,7 @@ class User extends Authenticatable
     ];/**
      * Obtenir le profil associé à l'utilisateur.
      */
-    public function userProfile(): HasOne
+    public function profile(): HasOne
     {
         return $this->hasOne(UserProfile::class);
     }

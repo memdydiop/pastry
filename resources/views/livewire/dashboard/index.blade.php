@@ -11,7 +11,7 @@ new class extends Component {
     public function mount()
     {
 
-        $this->full_name = Auth::user()->userProfile->full_name;
+        $this->full_name = Auth::user()->profile->full_name;
         $this->email = Auth::user()->email;
     }
 };
@@ -31,7 +31,7 @@ new class extends Component {
                 <p class="mt-2 text-blue-100">{{ __('Ready to explore your dashboard?') }}</p>
             </div>
             <div class="hidden h-16 w-16 items-center justify-center rounded-full bg-white/20 text-2xl font-bold text-white sm:flex">
-                {{ auth()->user()->userProfile->initials() }}
+                {{ auth()->user()->profile->initials() }}
             </div>
         </div>
     </div> --}}
@@ -48,7 +48,7 @@ new class extends Component {
                 </div>
                 <div class="ml-4">
                     <p class="text-sm font-medium text-gray-600">{{ __('Profile Status') }}</p>
-                    <p class="text-2xl font-semibold text-gray-900">{{ auth()->user()->userProfile ? __('Complete') : __('Incomplete') }}</p>
+                    <p class="text-2xl font-semibold text-gray-900">{{ auth()->user()->profile ? __('Complete') : __('Incomplete') }}</p>
                 </div>
             </div>
         </div>
@@ -63,7 +63,7 @@ new class extends Component {
                 </div>
                 <div class="ml-4">
                     <p class="text-sm font-medium text-gray-600">{{ __('Member Since') }}</p>
-                    <p class="text-2xl font-semibold text-gray-900">{{ auth()->user()->userProfile->created_at->format('M Y') }}</p>
+                    <p class="text-2xl font-semibold text-gray-900">{{ auth()->user()->profile->created_at->format('M Y') }}</p>
                 </div>
             </div>
         </div>
@@ -107,7 +107,7 @@ new class extends Component {
             <div class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
                 <h3 class="mb-4 text-lg font-semibold text-gray-900">{{ __('Recent Activity') }}</h3>
                 <div class="space-y-4">
-                    @if(auth()->user()->userProfile)
+                    @if(auth()->user()->profile)
                     <div class="flex items-center space-x-3">
                         <div class="flex h-8 w-8 items-center justify-center rounded-full bg-green-100">
                             <svg class="h-4 w-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
@@ -128,7 +128,7 @@ new class extends Component {
                         </div>
                         <div class="flex-1">
                             <p class="text-sm text-gray-600">{{ __('Account verification completed') }}</p>
-                            <p class="text-xs text-gray-400">{{ auth()->user()->userProfile->email_verified_at?->format('M j, Y \a\t g:i A') ?? __('Pending') }}</p>
+                            <p class="text-xs text-gray-400">{{ auth()->user()->profile->email_verified_at?->format('M j, Y \a\t g:i A') ?? __('Pending') }}</p>
                         </div>
                     </div>
                 </div>
@@ -168,20 +168,20 @@ new class extends Component {
                 <div class="space-y-3 text-sm">
                     <div class="flex justify-between">
                         <span class="text-gray-600">{{ __('Full Name') }}:</span>
-                        <span class="font-medium">{{ auth()->user()->userProfile->full_name }}</span>
+                        <span class="font-medium">{{ auth()->user()->profile->full_name }}</span>
                     </div>
                     <div class="flex justify-between">
                         <span class="text-gray-600">{{ __('Email') }}:</span>
-                        <span class="font-medium">{{ auth()->user()->userProfile->email }}</span>
+                        <span class="font-medium">{{ auth()->user()->profile->email }}</span>
                     </div>
                     <div class="flex justify-between">
                         <span class="text-gray-600">{{ __('Member Since') }}:</span>
                         <span class="font-medium">{{ auth()->user()->created_at->format('M j, Y') }}</span>
                     </div>
-                    @if(auth()->user()->userProfile?->phone)
+                    @if(auth()->user()->profile?->phone)
                         <div class="flex justify-between">
                             <span class="text-gray-600">{{ __('Phone') }}:</span>
-                            <span class="font-medium">{{ auth()->user()->userProfile->phone }}</span>
+                            <span class="font-medium">{{ auth()->user()->profile->phone }}</span>
                         </div>
                     @endif
                 </div>
