@@ -1,0 +1,149 @@
+@import 'tailwindcss';
+@import '../../vendor/livewire/flux/dist/flux.css';
+
+@source '../views';
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../vendor/livewire/flux-pro/stubs/**/*.blade.php';
+@source '../../vendor/livewire/flux/stubs/**/*.blade.php';
+
+/* Dark mode disabled - removed @custom-variant and theme layers */
+
+@theme {
+    --font-sans: 'Public Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-poppins: 'Poppins', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+
+    --color-zinc-50: #fafafa;
+    --color-zinc-100: #f5f5f5;
+    --color-zinc-200: #e5e5e5;
+    --color-zinc-300: #d4d4d4;
+    --color-zinc-400: #a3a3a3;
+    --color-zinc-500: #737373;
+    --color-zinc-600: #525252;
+    --color-zinc-700: #404040;
+    --color-zinc-800: #262626;
+    --color-zinc-900: #171717;
+    --color-zinc-950: #0a0a0a;
+
+    --color-primary: #405189;
+    --color-primary-hover: #364574;
+    --color-primary-foreground: var(--color-white);
+    --color-primary-border: rgba(64, 81, 137, 1);
+    
+    --color-secondary: #3577f1;
+    --color-secondary-hover: #2d65cd;
+    --color-secondary-foreground: var(--color-white);
+    --color-secondary-border: rgba(53, 119, 241, 1);
+    
+    --color-success: #0ab39c;
+    --color-success-hover: #099895;
+    --color-success-foreground: var(--color-white);
+    --color-success-border: rgba(10, 179, 156, 1);
+    
+    --color-info: #299cdb;
+    --color-info-hover: #2385ba;
+    --color-info-foreground: var(--color-white);
+    --color-info-border: rgba(41, 156, 219, 1);
+    
+    --color-warning: #f7b84b;
+    --color-warning-hover: #d29c40;
+    --color-warning-foreground: var(--color-white);
+    --color-warning-border: rgba(247, 184, 75, 1);
+    
+    --color-danger: #f06548;
+    --color-danger-hover: #cc563d;
+    --color-danger-foreground: var(--color-white);
+    --color-danger-border: rgba(240, 101, 72, 1);
+    
+    --color-light: #f3f6f9;
+    --color-light-hover: #e5e5e5;   
+    --color-light-border: rgba(243, 246, 249, 1);
+    
+    --color-dark: #495057;
+    --color-dark-hover: #373a46;
+    --color-dark-border: rgba(33, 37, 41, 1);
+    
+    --color-body: #f3f3f9;
+    --color-heading-clr:#495057;
+    --color-muted: #878a99;
+
+    --text-10: 0.625rem;
+    --text-11: 0.6875rem;
+    --text-12: 0.75rem;
+    --text-13: 0.8125rem;
+    --text-14: 0.875rem;
+    --text-15: 0.9375rem;
+    --text-16: 1rem;
+    --text-17: 1.0625rem;
+    --text-18: 1.125rem;
+    --text-19: 1.1875rem;
+    --text-20: 1.25rem;
+    --text-21: 1.3125rem;
+    --text-22: 1.375rem;
+    --text-23: 1.935rem;
+    --text-24: 1.5rem;
+    --text-36: 2.25rem;
+    --text-48: 3rem;
+    --text-sm: var(--text-13);
+
+    --body-font-family: var(--font-sans);
+    --body-font-size: var(--font-base);
+    --body-font-weight: var(--font-weight-normal);
+    --body-line-height: 1.5;
+
+
+    --color-sidebar-bg: #14274E;
+    --color-sidebar-border: var(--color-primary);
+    --color-sidebar-item-color: #abb9e8;
+    --color-sidebar-item-bg: #223458;
+    --color-sidebar-item-hover-color: #abb9e8;
+    --color-sidebar-item-active-color: #f7f9fc;
+    --color-sidebar-item-active-bg: #223458;
+    --color-sidebar-sub-item-color: #abb9e8;
+    --color-sidebar-sub-item-hover-color: #abb9e8;
+    --color-sidebar-sub-item-active-color: #f7f9fc;
+    --color-sidebar-title-color: #838fb9;
+    --color-sidebar-box-shadow: 0 2px 4px rgba(15, 34, 58, 0.12);
+    --color-sidebar-dropdown-box-shadow: 0 2px 4px rgba(15, 34, 58, 0.12);
+    --color-sidebar-user-bg: rgba(255, 255, 255, 0.08);
+    --color-sidebar-user-name-text: #fff;
+    --color-sidebar-user-name-sub-text: #bcc2d6;
+
+
+    --color-accent: var(--color-neutral-800);
+    --color-accent-content: var(--color-neutral-800);
+    --color-accent-foreground: var(--color-white);
+
+    --color-shadow-input: rgba(6, 111, 209, .25);
+    --color-input-brdr-focus: rgb(131, 183, 232);
+}
+
+/* Dark mode theme layer removed */
+
+@layer base {
+
+    *,
+    ::after,
+    ::before,
+    ::backdrop,
+    ::file-selector-button {
+        border-color: var(--color-gray-200, currentColor);
+    }
+}
+
+[data-flux-field]:not(ui-radio, ui-checkbox) {
+    @apply grid gap-2;
+}
+
+[data-flux-label] {
+    @apply !mb-0 !leading-tight;
+}
+
+input:focus[data-flux-control],
+textarea:focus[data-flux-control],
+select:focus[data-flux-control] {
+    @apply outline-hidden ring-4 border-input-brdr-focus ring-shadow-input  ring-offset-accent-foreground;
+}
+
+/* \[:where(&)\]:size-4 {
+    @apply size-4;
+} */
