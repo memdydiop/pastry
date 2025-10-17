@@ -3,11 +3,25 @@
 namespace App\Observers;
 
 use App\Models\UserProfile;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 
 class UserProfileObserver
-{/**
-     * Gérer l'événement "updating" (mise à jour) du modèle UserProfile.
+{
+    /**
+     * Gérer l'événement "updated" du modèle UserProfile.
+     *
+     * @param  \App\Models\UserProfile  $userProfile
+     * @return void
+     */
+    public function updated(UserProfile $userProfile): void
+    {
+        // Invalider le cache de l'URL de l'avatar pour refléter les changements immédiatement.
+        $this->clearAvatarCache($userProfile);
+    }
+
+    /**
+     * Gérer l'événement "updating" du modèle UserProfile.
      *
      * @param  \App\Models\UserProfile  $userProfile
      * @return void
@@ -22,16 +36,30 @@ class UserProfileObserver
     }
 
     /**
-     * Gérer l'événement "deleting" (suppression) du modèle UserProfile.
+     * Gérer l'événement "deleted" du modèle UserProfile.
      *
      * @param  \App\Models\UserProfile  $userProfile
      * @return void
      */
-    public function deleting(UserProfile $userProfile): void
+    public function deleted(UserProfile $userProfile): void
     {
-        // S'il y a un avatar, le supprimer
+        // Invalider le cache de l'URL de l'avatar.
+        $this->clearAvatarCache($userProfile);
+
+        // S'il y a un avatar, le supprimer du stockage.
         if ($userProfile->avatar) {
             Storage::disk('public')->delete($userProfile->avatar);
         }
+    }
+
+    /**
+     * Supprime la clé de cache de l'URL de l'avatar pour un profil donné.
+     *
+     * @param UserProfile $userProfile
+     * @return void
+     */
+    protected function clearAvatarCache(UserProfile $userProfile): void
+    {
+        Cache::forget('user:' . $userProfile->user_id . ':avatar_url');
     }
 }
