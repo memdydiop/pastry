@@ -16,8 +16,10 @@ class EnsureProfileIsCompleted
      */
     public function handle(Request $request, Closure $next): Response
     {
+        
         $user = Auth::user();
 
+        // Si l'utilisateur n'est pas authentifié, laisser passer
         if (! $user) {
             return $next($request);
         }
@@ -27,13 +29,17 @@ class EnsureProfileIsCompleted
         // Routes à exclure de la redirection
         $excludedRoutes = [
             'profile.create',
+            'profile.store',
+            'profile.update',
             'logout',
             'verification.*',
             'livewire.*',
+            'password.*',
         ];
 
         $isExcludedRoute = $request->routeIs($excludedRoutes);
 
+        // Si le profil n'est pas complet et que la route n'est pas exclue
         if (! $profileIsComplete && ! $isExcludedRoute) {
             return redirect()
                 ->route('profile.create')

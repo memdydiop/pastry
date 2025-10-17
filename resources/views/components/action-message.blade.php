@@ -8,7 +8,7 @@
     x-show.transition.out.opacity.duration.1500ms="shown"
     x-transition:leave.opacity.duration.1500ms
     style="display: none"
-    {{ $attributes->merge(['class' => 'text-sm']) }}
+    {{ $attributes->merge(['class' => 'mb-6 rounded-md bg-green-50 p-4']) }}
 >
-    {{ $slot->isEmpty() ? __('Saved.') : $slot }}
+    <Flux:text sm color="success"> {{ $slot->isEmpty() ? __('Saved.') : $slot }}</Flux:text>
 </div>

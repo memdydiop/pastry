@@ -11,8 +11,6 @@ use Illuminate\Support\Str;
 
 class UserProfile extends Model
 {
-    protected $table = "user_profiles";
-
     protected $fillable = [
         'full_name',
         'date_of_birth',
@@ -25,12 +23,12 @@ class UserProfile extends Model
     ];
     
     /**
-    * The attributes that should be cast.
-    *
-    * @var array
-    */
+     * The attributes that should be cast.
+     *
+     * @var array
+     */
     protected $casts = [
-       'date_of_birth' => 'date',
+        'date_of_birth' => 'date',
     ];
 
     /**
@@ -53,29 +51,51 @@ class UserProfile extends Model
         return Str::of($this->full_name)
             ->explode(' ')
             ->take(2)
-            ->map(fn ($word) => Str::substr($word, 0, 1))
+            ->map(fn ($word) => Str::upper(Str::substr($word, 0, 1)))
             ->implode('');
     }
 
     /**
      * Accesseur pour obtenir l'URL complète de l'avatar.
      * Le résultat est mis en cache pour améliorer les performances.
+     * 
+     * Note: Le nom de la méthode doit correspondre à l'attribut sans "Attribute"
      */
-    public function avatarUrl(): Attribute
+    protected function avatar(): Attribute
     {
-        return Attribute::get(function () {
-            // Clé de cache unique pour l'avatar de cet utilisateur.
-            $cacheKey = 'user:' . $this->user_id . ':avatar_url';
+        return Attribute::make(
+            get: function ($value) {
+                // Clé de cache unique pour l'avatar de cet utilisateur.
+                $cacheKey = 'user:' . $this->user_id . ':avatar';
 
-            // On garde le résultat en cache pendant 1 heure (3600 secondes).
-            return Cache::remember($cacheKey, 3600, function () {
-                // Si un avatar est défini, retourne son URL via le disque 'public'.
-                // Sinon, retourne une URL par défaut depuis ui-avatars.com.
-                return $this->avatar
-                    ? Storage::disk('public')->url($this->avatar)
-                    : 'https://ui-avatars.com/api/?name=' . urlencode($this->initials() ?: 'P') . '&background=random';
-            });
-        });
+                // On garde le résultat en cache pendant 1 heure (3600 secondes).
+                return Cache::remember($cacheKey, 3600, function () use ($value) {
+                    // Si un avatar est défini, retourne son URL via le disque 'public'.
+                    if ($value) {
+                        return Storage::disk('public')->url($value);
+                    }
+                    
+                    // Sinon, retourne une URL par défaut depuis ui-avatars.com.
+                    $initials = $this->initials() ?: 'U';
+                    return 'https://ui-avatars.com/api/?name=' . urlencode($initials) . '&background=random';
+                });
+            }
+        );
+    }
+
+    /**
+     * Vide le cache de l'avatar pour cet utilisateur.
+     */
+    public function clearAvatarCache(): void
+    {
+        Cache::forget('user:' . $this->user_id . ':avatar');
+    }
+
+    /**
+     * Obtient le chemin du fichier avatar (sans l'URL complète)
+     */
+    public function getAvatarPathAttribute(): ?string
+    {
+        return $this->attributes['avatar'] ?? null;
     }
 }
-

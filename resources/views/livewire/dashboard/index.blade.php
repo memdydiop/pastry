@@ -128,7 +128,7 @@ new class extends Component {
                         </div>
                         <div class="flex-1">
                             <p class="text-sm text-gray-600">{{ __('Account verification completed') }}</p>
-                            <p class="text-xs text-gray-400">{{ auth()->user()->profile->email_verified_at?->format('M j, Y \a\t g:i A') ?? __('Pending') }}</p>
+                            <p class="text-xs text-gray-400">{{ auth()->user()->email_verified_at?->format('M j, Y \a\t g:i A') ?? __('Pending') }}</p>
                         </div>
                     </div>
                 </div>
@@ -168,11 +168,11 @@ new class extends Component {
                 <div class="space-y-3 text-sm">
                     <div class="flex justify-between">
                         <span class="text-gray-600">{{ __('Full Name') }}:</span>
-                        <span class="font-medium">{{ auth()->user()->profile->full_name }}</span>
+                        <span class="font-medium">{{ auth()->user()->profile?->full_name ?? __('Not set') }}</span>
                     </div>
                     <div class="flex justify-between">
                         <span class="text-gray-600">{{ __('Email') }}:</span>
-                        <span class="font-medium">{{ auth()->user()->profile->email }}</span>
+                        <span class="font-medium">{{ auth()->user()->email }}</span>
                     </div>
                     <div class="flex justify-between">
                         <span class="text-gray-600">{{ __('Member Since') }}:</span>

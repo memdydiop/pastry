@@ -15,12 +15,12 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->string('full_name');
-            $table->date('date_of_birth')->nullable();
-            $table->string('phone',  20)->unique();
+            $table->date('date_of_birth')->required();
+            $table->string('phone',  20)->unique()->index('phone');
             $table->string('address', 255);
             $table->string('city',100);
-            $table->string('country', 100)->nullable();
-            $table->text('bio')->nullable();
+            $table->string('country', 100)->required();
+            $table->text('bio')->required();
             $table->string('avatar')->nullable();
             $table->timestamps();
         });

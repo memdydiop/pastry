@@ -11,6 +11,11 @@ use Illuminate\Support\Str;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 use App\Models\UserProfile;
 
+/**
+ * The attributes that are mass assignable.
+ *
+ * @var list<string>
+ */
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
@@ -62,7 +67,9 @@ class User extends Authenticatable
     }
 
     /**
-     * Délégué pour obtenir le nom à afficher.
+     * Accesseur pour obtenir le nom à afficher.
+     * 
+     * @return string
      */
     public function getNameAttribute(): string
     {
@@ -70,11 +77,13 @@ class User extends Authenticatable
     }
 
     /**
-     * Délégué pour obtenir l'URL de la photo de profil.
+     * Accesseur pour obtenir l'URL de la photo de profil.
+     * 
+     * @return string
      */
     public function getAvatarAttribute(): string
     {
-        return $this->profile?->avatar_url ?? '';
+        return $this->profile?->avatar ?? '';
     }
 
     /**
@@ -88,11 +97,32 @@ class User extends Authenticatable
             return $this->profile->initials();
         }
 
-        // Sinon, solution de repli : on calcule les initiales à partir de l'email.
-        return Str::of($this->email)
-            ->explode('@')
-            ->first()
-            ->substr(0, 2)
-            ->upper();
+        // Solution de repli : calculer les initiales à partir de l'email
+        return Str::upper(Str::substr($this->email, 0, 2));
+    }
+
+    /**
+     * Vider le cache de l'avatar de l'utilisateur.
+     * 
+     * @return void
+     */
+    public function clearAvatarCache(): void
+    {
+        $this->profile?->clearAvatarCache();
+    }
+
+    /**
+     * Boot method pour enregistrer les événements du modèle.
+     */
+    protected static function boot()
+    {
+        parent::boot();
+
+        // Eager load automatiquement le profil pour éviter les N+1 queries
+        static::retrieved(function ($user) {
+            if (! $user->relationLoaded('profile')) {
+                $user->load('profile');
+            }
+        });
     }
 }

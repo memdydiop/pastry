@@ -2,103 +2,125 @@
 
 use App\Livewire\Forms\ProfileForm;
 use Livewire\Attributes\Layout;
-use App\Http\Requests\StoreUserProfileRequest; 
 use Livewire\Volt\Component;
 use Livewire\WithFileUploads;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 new #[Layout('components.layouts.auth')]
     class extends Component {
 
     use WithFileUploads;
-    
-    // Déclarez une seule propriété pour le formulaire.
+
     public ProfileForm $form;
 
+    /**
+     * Sauvegarde le profil utilisateur avec gestion des transactions
+     */
     public function saveProfile()
     {
-        // Validez et récupérez les données en un seul appel !
+        // Validation des données
         $data = $this->form->validate();
 
-        // Si un avatar est téléchargé, on le stocke
-        if ($this->form->avatar) {
-            $data['avatar'] = $this->form->avatar->store('avatars', 'public');
+        try {
+            DB::beginTransaction();
+
+            // Gestion de l'upload de l'avatar
+            if ($this->form->avatar) {
+                $avatarPath = $this->form->avatar->store('avatars', 'public');
+                $data['avatar'] = $avatarPath;
+            }
+
+            // Création du profil de l'utilisateur
+            auth()->user()->profile()->create($data);
+
+            // Met à jour le statut de l'utilisateur
+            auth()->user()->update(['profile_completed' => true]);
+
+            DB::commit();
+
+            // Message de succès
+            session()->flash('success', 'Votre profil a été créé avec succès !');
+
+            // Redirection vers le tableau de bord
+            return $this->redirect(route('dashboard'), navigate: true);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            DB::rollBack();
+
+            // Supprimer l'avatar uploadé si la validation échoue
+            if (isset($avatarPath)) {
+                Storage::disk('public')->delete($avatarPath);
+            }
+
+            // Relancer l'exception pour afficher les erreurs
+            throw $e;
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            // Supprimer l'avatar uploadé en cas d'erreur
+            if (isset($avatarPath)) {
+                Storage::disk('public')->delete($avatarPath);
+            }
+
+            Log::error('Erreur lors de la création du profil', [
+                'user_id' => auth()->id(),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            session()->flash('error', 'Une erreur est survenue lors de la création de votre profil. Veuillez réessayer.');
+
+            return null;
         }
-
-        // Crée le profil de l'utilisateur
-        auth()->user()->profile()->create($data);
-
-        // Met à jour le statut de l'utilisateur
-        auth()->user()->update(['profile_completed' => true]);
-
-        // Redirige vers le tableau de bord
-        return $this->redirect(route('dashboard'), navigate: true);
     }
 }; ?>
 
 <div class="flex flex-col gap-6">
-    <x-auth-header 
-        :title="__('Create an account')" 
-        :description="__('Enter your details below to create your account')" />
+    <x-auth-header :title="__('Créer votre profil')" :description="__('Complétez vos informations pour finaliser votre inscription')" />
 
-    <!-- Session Status -->
-    <x-auth-session-status class="text-center" :status="session('status')" />
+    <!-- Messages de session -->
+    @if (session('success'))
+        <div class="rounded-md bg-green-50 p-4">
+            <p class="text-sm text-green-800">{{ session('success') }}</p>
+        </div>
+    @endif
+
+    @if (session('error'))
+        <div class="rounded-md bg-red-50 p-4">
+            <p class="text-sm text-red-800">{{ session('error') }}</p>
+        </div>
+    @endif
 
     <form method="POST" wire:submit="saveProfile" class="flex flex-col gap-6">
 
-        <!-- Full_name -->
-        <flux:input 
-            wire:model="form.full_name" 
-            :label="__('Nom et Pénoms')" 
-            name="full_name"
-            type="text" required autofocus
-            placeholder="Nom Complet" />
+        <!-- Nom complet -->
+        <flux:input wire:model="form.full_name" :label="__('Nom et Prénoms')" name="full_name" type="text" required
+            autofocus placeholder="Nom Complet" />
 
-        <!-- Date of Birth -->
-        <flux:input 
-            wire:model="form.date_of_birth" 
-            :label="__('Date de naissance')" 
-            name="date_of_birth"
-            type="date"
-            placeholder="Date de naissance" />
+        <!-- Date de naissance -->
+        <flux:input wire:model="form.date_of_birth" :label="__('Date de naissance (optionnel)')" name="date_of_birth"
+            type="date" :max="date('Y-m-d')" placeholder="Date de naissance" />
 
-        <!-- Phone -->
-        <flux:input 
-            wire:model="form.phone" 
-            :label="__('Téléphone')" 
-            name="phone"
-            type="tel"
-            placeholder="Numéro de téléphone" />
+        <!-- Téléphone -->
+        <flux:input wire:model="form.phone" :label="__('Téléphone')" name="phone" type="tel" required
+            placeholder="+225 XX XX XX XX XX" />
 
-        <!-- Address -->
-        <flux:input 
-            wire:model="form.address" 
-            :label="__('Adresse')" 
-            name="address"
-            type="text"
+        <!-- Adresse -->
+        <flux:input wire:model="form.address" :label="__('Adresse')" name="address" type="text" required
             placeholder="Adresse complète" />
 
-        <!-- City -->
-        <flux:input 
-            wire:model="form.city" 
-            :label="__('Ville')" 
-            name="city"
-            type="text"
-            placeholder="Ville" />
+        <!-- Ville -->
+        <flux:input wire:model="form.city" :label="__('Ville')" name="city" type="text" required placeholder="Ville" />
 
-        <!-- Country -->
-        <flux:input 
-            wire:model="form.country" 
-            :label="__('Pays')" 
-            name="country"
-            type="text"
+        <!-- Pays -->
+        <flux:input wire:model="form.country" :label="__('Pays (optionnel)')" name="country" type="text"
             placeholder="Pays" />
 
-        <!-- Bio -->
-        <flux:textarea 
-            wire:model="form.bio" 
-            :label="__('Biographie')" 
-            name="bio"
-            rows="4"
+        <!-- Biographie -->
+        <flux:textarea wire:model="form.bio" :label="__('Biographie (optionnel)')" name="bio" rows="4"
             placeholder="Parlez-nous de vous..." />
 
         <!-- Avatar -->
@@ -106,22 +128,30 @@ new #[Layout('components.layouts.auth')]
             <label for="avatar" class="block text-sm font-medium text-gray-700 mb-2">
                 {{ __('Photo de profil (optionnel)') }}
             </label>
-            <input 
-                type="file" 
-                wire:model="form.avatar" 
-                name="avatar"
-                id="avatar"
-                accept="image/*"
-                class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" />
-            @error('avatar')
-                <span class="text-red-500 text-sm mt-1">{{ $message }}</span>
+
+            
+
+            <input type="file" wire:model="form.avatar" name="avatar" id="avatar"
+                accept="image/jpeg,image/jpg,image/png,image/gif" class="block w-full text-sm text-gray-500 
+                       file:mr-4 file:py-2 file:px-4 
+                       file:rounded-full file:border-0 
+                       file:text-sm file:font-semibold 
+                       file:bg-blue-50 file:text-blue-700 
+                       hover:file:bg-blue-100" />
+
+            <p class="mt-1 text-xs text-gray-500">
+                JPG, PNG, GIF. 2MB maximum.
+            </p>
+
+            @error('form.avatar')
+                <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span>
             @enderror
         </div>
 
-        <!-- Submit Button -->
-        <flux:button type="submit" variant="primary" wire:loading.attr="disabled">
-            <span wire:loading.remove>Enregistrer les modifications</span>
-            <span wire:loading>Enregistrement en cours...</span>
+        <!-- Bouton de soumission -->
+        <flux:button type="submit" variant="primary" wire:loading.attr="disabled" class="w-full">
+            <span wire:loading.remove>Créer mon profil</span>
+            <span wire:loading>Création en cours...</span>
         </flux:button>
 
     </form>

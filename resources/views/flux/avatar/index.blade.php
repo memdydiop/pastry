@@ -76,7 +76,7 @@ $classes = Flux::classes()
     ->add('relative flex-none isolate flex items-center justify-center')
     ->add('[:where(&)]:font-medium')
     ->add('rounded-[var(--avatar-radius)]')
-    ->add($hasTextContent ? '[:where(&)]:bg-zinc-200 [:where(&)]:text-zinc-800' : '')
+    ->add($hasTextContent ? '[:where(&)]:bg-transparent[:where(&)]:text-zinc-800' : '')
     ->add(match($color) {
         'red' => 'bg-red-200 text-red-800',
         'orange' => 'bg-orange-200 text-orange-800',
@@ -173,7 +173,7 @@ $label = $alt ?? $name;
 <flux:with-tooltip :$tooltip :$attributes>
     <flux:button-or-link :attributes="$attributes->class($classes)->merge($circle ? ['data-circle' => 'true'] : [])" :$as :$href data-flux-avatar data-slot="avatar" data-size="{{ $size }}">
         <?php if ($src): ?>
-            <img src="{{ asset($src) }}" alt="{{ $alt ?? $name }}" class="rounded-[var(--avatar-radius)]">
+            <img src="{{ asset($src) }}" alt="{{ $alt ?? $name }}" class=" size-full object-cover mask mask-squircle">
         <?php elseif ($icon): ?>
             <flux:icon :name="$icon" :variant="$iconVariant" :class="$iconClasses" />
         <?php elseif ($hasTextContent): ?>
