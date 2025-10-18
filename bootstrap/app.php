@@ -14,6 +14,10 @@ return Application::configure(basePath: dirname(__DIR__))
         
         $middleware->alias([
             'profile.completed' => \App\Http\Middleware\EnsureProfileIsCompleted::class,
+       
+            'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
+            'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
+            'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
         ]);
 
         //

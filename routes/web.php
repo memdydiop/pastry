@@ -22,23 +22,25 @@ Route::middleware(['auth', 'verified', 'profile.completed'])->group(function () 
 
     Volt::route('/', 'dashboard/index')->name('dashboard');
 
+    Route::prefix('settings')->as('settings.')->group(function () {
 
-    Route::redirect('settings', 'settings/profile');
+        Route::redirect('settings', 'settings/profile');
+        Volt::route('profile', 'settings.profile')->name('profile');
+        Volt::route('password', 'settings.password')->name('password');
+        Volt::route('appearance', 'settings.appearance')->name('appearance');
 
-    Volt::route('settings/profile', 'settings.profile')->name('profile.edit');
-    Volt::route('settings/password', 'settings.password')->name('password.edit');
-    Volt::route('settings/appearance', 'settings.appearance')->name('appearance.edit');
+        Volt::route('two-factor', 'settings.two-factor')
+            ->middleware(
+                when(
+                    Features::canManageTwoFactorAuthentication()
+                        && Features::optionEnabled(Features::twoFactorAuthentication(), 'confirmPassword'),
+                    ['password.confirm'],
+                    [],
+                ),
+            )
+            ->name('two-factor');
+    });
 
-    Volt::route('settings/two-factor', 'settings.two-factor')
-        ->middleware(
-            when(
-                Features::canManageTwoFactorAuthentication()
-                    && Features::optionEnabled(Features::twoFactorAuthentication(), 'confirmPassword'),
-                ['password.confirm'],
-                [],
-            ),
-        )
-        ->name('two-factor.show');
 });
 
 require __DIR__.'/auth.php';

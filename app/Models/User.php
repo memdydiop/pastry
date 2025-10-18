@@ -11,6 +11,7 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 use App\Models\UserProfile;
+use Spatie\Permission\Traits\HasRoles;
 
 /**
  * The attributes that are mass assignable.
@@ -20,7 +21,7 @@ use App\Models\UserProfile;
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable, TwoFactorAuthenticatable;
+    use HasFactory, Notifiable, TwoFactorAuthenticatable, HasRoles;
 
     /**
      * The attributes that are mass assignable.

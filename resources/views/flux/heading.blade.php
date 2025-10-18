@@ -13,9 +13,9 @@
             default => '[:where(&)]:text-slate-800',
         })
         ->add(match ($size) {
-            'xl' => 'text-2xl [&:has(+[data-flux-subheading])]:mb-2 [[data-flux-subheading]+&]:mt-2',
+            'xl' => 'text-xl [&:has(+[data-flux-subheading])]:mb-2 [[data-flux-subheading]+&]:mt-2',
             'lg' => 'text-base [&:has(+[data-flux-subheading])]:mb-2 [[data-flux-subheading]+&]:mt-2',
-            default => 'text-sm [&:has(+[data-flux-subheading])]:mb-2 [[data-flux-subheading]+&]:mt-2',
+            default => 'text-15 [&:has(+[data-flux-subheading])]:mb-2 [[data-flux-subheading]+&]:mt-2',
         })
     ;
 @endphp

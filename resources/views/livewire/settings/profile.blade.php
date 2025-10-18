@@ -158,38 +158,53 @@ new class extends Component {
 <x-layouts.content :heading="__('Paramètres')" :subheading="__('Gérez votre profil')" :pageHeading="__('Profil')"
     :pageSubheading="__('Mettez à jour les informations de votre profil et votre avatar.')">
 
+    <x-slot name="actions" class="flex gap-x-2">
+        @if (Laravel\Fortify\Features::canManageTwoFactorAuthentication())
+            <flux:navlist.item class="h-8! bg-success hover:bg-success-hover! text-success-foreground! hover:text-success-foreground" :href="route('settings.two-factor')" wire:navigate>
+                {{ __('Two-Factor Auth') }}
+            </flux:navlist.item>
+        @endif
+        <!-- Formulaire de suppression de compte -->
+        <livewire:settings.delete-user-form />
+    </x-slot>
+
     <form wire:submit="updateProfile" class="my-6 w-full space-y-6">
 
         <div class="grid grid-cols-1 gap-6 sm:grid-cols-6">
 
             <!-- Section Avatar -->
-            <div class="sm:col-span-2 flex flex-col items-start gap-4">
-                <div class="size-24 relative">
-                    @if ($form->avatar)
-                        <img src="{{ $form->avatar->temporaryUrl() }}" alt="Aperçu"
-                            class="h-24 w-24 flex-none mask mask-squircle bg-gray-800 object-cover">
-                    @else
-                        <img src="{{ $currentAvatarUrl }}" alt="Avatar actuel"
-                            class="h-24 w-24 flex-none mask mask-squircle bg-gray-800 object-cover">
-                    @endif
-
-                    <flux:button type="button"
-                        class="bg-transparent! size-24! cursor-pointer border-none! absolute! top-0! left-0!"
-                        onclick="document.getElementById('avatarInput').click()" aria-label="Changer l'avatar" />
-                </div>
-
-                <div class="flex gap-2">
-                    <flux:button type="button" size="sm" variant="ghost"
-                        onclick="document.getElementById('avatarInput').click()">
-                        Changer
-                    </flux:button>
-
-                    @if(auth()->user()->profile?->getRawOriginal('avatar'))
-                        <flux:button type="button" size="sm" variant="danger" wire:click="removeAvatar"
-                            wire:confirm="Êtes-vous sûr de vouloir supprimer votre avatar ?">
-                            Supprimer
+            <div class="sm:col-span-2 flex flex-col justify-between gap-y-2">
+                <ui-label class="inline-flex items-center text-sm font-medium [:where(&amp;)]:text-zinc-800" data-flux-label=""
+                    id="lofi-label-1f0419909aac3" aria-hidden="true">
+                    Photo de profil
+                
+                
+                </ui-label>
+                <div class="flex items-center gap-4">
+                    <div class="size-24 relative">
+                        @if ($form->avatar)
+                            <img src="{{ $form->avatar->temporaryUrl() }}" alt="Aperçu"
+                                class="h-24 w-24 flex-none mask mask-squircle bg-gray-800 object-cover">
+                        @else
+                            <img src="{{ $currentAvatarUrl }}" alt="Avatar actuel"
+                                class="h-24 w-24 flex-none mask mask-squircle bg-gray-800 object-cover">
+                        @endif
+                        <flux:button type="button"
+                            class="bg-transparent! size-24! cursor-pointer border-none! absolute! top-0! left-0!"
+                            onclick="document.getElementById('avatarInput').click()" aria-label="Changer l'avatar" />
+                    </div>
+                    <div class="flex flex-col items-center gap-2">
+                        <flux:button type="button" size="sm" variant="secondary"
+                            onclick="document.getElementById('avatarInput').click()">
+                            Changer
                         </flux:button>
-                    @endif
+                        @if(auth()->user()->profile?->getRawOriginal('avatar'))
+                            <flux:button type="button" size="sm" variant="danger" wire:click="removeAvatar"
+                                wire:confirm="Êtes-vous sûr de vouloir supprimer votre avatar ?">
+                                Supprimer
+                            </flux:button>
+                        @endif
+                    </div>
                 </div>
 
                 <flux:text sm color="muted">JPG, PNG ou WEBP. 2MB maximum.</flux:text>
@@ -204,7 +219,34 @@ new class extends Component {
 
             <!-- Champs du formulaire -->
             <div class="col-span-4">
-                <flux:textarea wire:model="form.bio" label="Biographie" rows="4" placeholder="Parlez-nous de vous..." />
+                <div class="space-y-2">
+                    <flux:textarea wire:model.live="form.bio" label="Biographie" rows="4" placeholder="Parlez-nous de vous..."
+                        maxlength="500" />
+            
+                    <div x-data="{ count: $wire.entangle('form.bio').live }" x-init="count = count || ''"
+                        class="flex items-center justify-between">
+            
+                        <!-- Compteur de caractères -->
+                        <div class="text-xs">
+                            <span :class="{
+                                    'text-red-600 font-semibold': count.length > 450,
+                                    'text-orange-600': count.length > 400 && count.length <= 450,
+                                    'text-gray-500': count.length <= 400
+                                }" x-text="`${count.length} / 500 caractères`">
+                            </span>
+                        </div>
+            
+                        <!-- Barre de progression -->
+                        <div class="w-32 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                            <div class="h-full transition-all duration-300" :class="{
+                                    'bg-red-500': count.length > 450,
+                                    'bg-orange-500': count.length > 400 && count.length <= 450,
+                                    'bg-blue-500': count.length <= 400
+                                }" :style="`width: ${(count.length / 500) * 100}%`">
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div class="sm:col-span-2">
@@ -243,7 +285,6 @@ new class extends Component {
         </div>
     </form>
 
-    <!-- Formulaire de suppression de compte -->
-    <livewire:settings.delete-user-form />
+   
 
 </x-layouts.content>
