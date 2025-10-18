@@ -3,6 +3,7 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -69,21 +70,23 @@ class User extends Authenticatable
     /**
      * Accesseur pour obtenir le nom à afficher.
      * 
-     * @return string
      */
-    public function getNameAttribute(): string
+    protected function name(): Attribute
     {
-        return $this->profile?->full_name ?? $this->email;
+        return Attribute::make(
+            get: fn () => $this->profile?->full_name ?? $this->email,
+        );
     }
 
     /**
      * Accesseur pour obtenir l'URL de la photo de profil.
      * 
-     * @return string
      */
-    public function getAvatarAttribute(): string
+    protected function avatar(): Attribute
     {
-        return $this->profile?->avatar ?? '';
+        return Attribute::make(
+            get: fn () => $this->profile?->avatar ?? '',
+        );
     }
 
     /**
@@ -98,7 +101,9 @@ class User extends Authenticatable
         }
 
         // Solution de repli : calculer les initiales à partir de l'email
-        return Str::upper(Str::substr($this->email, 0, 2));
+        //return Str::upper(Str::substr($this->email, 0, 2));
+        $prefix = Str::before($this->email, '@');
+        return Str::upper(Str::substr($prefix, 0, 2) ?: 'U');
     }
 
     /**

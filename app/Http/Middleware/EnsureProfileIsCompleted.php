@@ -10,6 +10,11 @@ use Symfony\Component\HttpFoundation\Response;
 class EnsureProfileIsCompleted
 {
     /**
+     * 💡 Constante pour l'itinéraire de redirection de complétion du profil.
+     * Centralise la configuration de la route.
+     */
+    protected const COMPLETION_ROUTE = 'profile.create';
+    /**
      * Handle an incoming request.
      *
      * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
@@ -28,7 +33,7 @@ class EnsureProfileIsCompleted
 
         // Routes à exclure de la redirection
         $excludedRoutes = [
-            'profile.create',
+            self::COMPLETION_ROUTE,
             'profile.store',
             'profile.update',
             'logout',
@@ -42,7 +47,7 @@ class EnsureProfileIsCompleted
         // Si le profil n'est pas complet et que la route n'est pas exclue
         if (! $profileIsComplete && ! $isExcludedRoute) {
             return redirect()
-                ->route('profile.create')
+                ->route(self::COMPLETION_ROUTE)
                 ->with('warning', 'Veuillez compléter votre profil pour continuer.');
         }
 

@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Forms;
 
+use App\Models\UserProfile;
 use Illuminate\Validation\Rule;
 use Livewire\Form;
 
@@ -31,7 +32,7 @@ class ProfileForm extends Form
                 'string', 
                 'max:20',
                 'regex:/^[+]?[0-9\s\-\(\)]+$/',
-                Rule::unique('user_profiles', 'phone')->ignore($profileId)
+                Rule::unique(UserProfile::class, 'phone')->ignore($profileId)
             ],
             'address' => ['required', 'string', 'max:255'],
             'city' => ['required', 'string', 'max:100'],
@@ -59,7 +60,7 @@ class ProfileForm extends Form
             'address.max' => 'L\'adresse ne peut pas dépasser 255 caractères.',
             'city.required' => 'La ville est obligatoire.',
             'city.max' => 'La ville ne peut pas dépasser 100 caractères.',
-            'citcountryy.required' => 'Le pays est obligatoire.',
+            'country.required' => 'Le pays est obligatoire.',
             'country.max' => 'Le pays ne peut pas dépasser 100 caractères.',
             'bio.max' => 'La biographie ne peut pas dépasser 1000 caractères.',
             'avatar.image' => 'Le fichier doit être une image.',

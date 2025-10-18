@@ -10,7 +10,13 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class UserProfile extends Model
-{
+{/**
+     * 💡 Touches le modèle parent `User` chaque fois que ce modèle est mis à jour.
+     *
+     * @var array
+     */
+    protected $touches = ['user'];
+
     protected $fillable = [
         'full_name',
         'date_of_birth',
@@ -77,6 +83,7 @@ class UserProfile extends Model
                     
                     // Sinon, retourne une URL par défaut depuis ui-avatars.com.
                     $initials = $this->initials() ?: 'U';
+                    $bgColor = hash('crc32b', (string) $this->user_id);
                     return 'https://ui-avatars.com/api/?name=' . urlencode($initials) . '&background=random';
                 });
             }
@@ -89,6 +96,11 @@ class UserProfile extends Model
     public function clearAvatarCache(): void
     {
         Cache::forget('user:' . $this->user_id . ':avatar');
+        
+        // 💡 Suppression du fichier physique de l'avatar sur le disque de stockage
+        if ($this->attributes['avatar']) {
+            Storage::disk('public')->delete($this->attributes['avatar']);
+        }
     }
 
     /**

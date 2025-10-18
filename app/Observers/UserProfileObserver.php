@@ -49,12 +49,14 @@ class UserProfileObserver
         // Invalider le cache de l'URL de l'avatar.
         $this->clearAvatarCache($userProfile);
 
+        $avatarPath = $userProfile->getAvatarPathAttribute();
+
         // S'il y a un avatar, le supprimer du stockage.
-        if ($userProfile->avatar) {
+        if ($avatarPath) {
             try {
-                if (Storage::disk('public')->exists($userProfile->avatar)) {
-                    Storage::disk('public')->delete($userProfile->avatar);
-                    Log::info("Avatar supprimé lors de la suppression du profil: {$userProfile->avatar_path}");
+                if (Storage::disk('public')->exists($avatarPath)) {
+                    Storage::disk('public')->delete($avatarPath);
+                    Log::info("Avatar supprimé lors de la suppression du profil: {$avatarPath}");
                 }
             } catch (\Exception $e) {
                 Log::error("Erreur lors de la suppression de l'avatar: {$e->getMessage()}");

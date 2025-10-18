@@ -23,6 +23,14 @@ class FortifyServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+
+        // 💡 Assurer la cohérence du thème Livewire pour toutes les vues d'authentification
+        Fortify::loginView(fn () => view('livewire.auth.login'));
+        Fortify::registerView(fn () => view('livewire.auth.register'));
+        Fortify::requestPasswordResetLinkView(fn () => view('livewire.auth.forgot-password'));
+        Fortify::resetPasswordView(fn () => view('livewire.auth.reset-password'));
+        Fortify::verifyEmailView(fn () => view('livewire.auth.verify-email'));
+        
         Fortify::twoFactorChallengeView(fn () => view('livewire.auth.two-factor-challenge'));
         Fortify::confirmPasswordView(fn () => view('livewire.auth.confirm-password'));
 
