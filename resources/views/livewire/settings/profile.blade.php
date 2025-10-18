@@ -4,7 +4,6 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
 use App\Livewire\Forms\ProfileForm;
 use Livewire\Volt\Component;
 use Livewire\WithFileUploads;
@@ -14,10 +13,10 @@ new class extends Component {
     use WithFileUploads;
 
     public ProfileForm $form;
+    public string $currentAvatarUrl = '';
 
     /**
-     * Mount the component and populate the form
-     * with the authenticated user's profile data.
+     * Initialise le composant avec les données du profil.
      */
     public function mount(): void
     {
@@ -33,76 +32,114 @@ new class extends Component {
                 'country' => $profile->country,
                 'bio' => $profile->bio,
             ]);
+
+            $this->currentAvatarUrl = $profile->avatar;
         }
     }
 
     /**
-     * Update the profile information with transaction support.
+     * Met à jour le profil avec gestion transactionnelle.
      */
     public function updateProfile(): void
     {
-        // Validation des données
-        $data = $this->form->validate();
+        // Validation
+        $validatedData = $this->form->validate();
+        $preparedData = $this->form->prepareForSave();
 
         try {
             DB::beginTransaction();
 
             $profile = auth()->user()->profile;
-            $oldAvatarPath = $profile->getAvatarPathAttribute();
+            $oldAvatarPath = $profile->getRawOriginal('avatar');
+            $newAvatarPath = null;
 
-            $newAvatarPath = null; 
-
-            // Gestion de l'upload du nouvel avatar
+            // Upload du nouvel avatar si fourni
             if ($this->form->avatar) {
                 $newAvatarPath = $this->form->avatar->store('avatars', 'public');
-                $data['avatar'] = $newAvatarPath;
+                $preparedData['avatar'] = $newAvatarPath;
             }
 
             // Mise à jour du profil
-            $profile->update($data);
+            $profile->update($preparedData);
+
+            // Suppression manuelle de l'ancien avatar si remplacé
+            if ($newAvatarPath && $oldAvatarPath && $oldAvatarPath !== $newAvatarPath) {
+                $profile->deleteAvatarFile($oldAvatarPath);
+            }
 
             DB::commit();
 
-            // Note: L'observer se charge de supprimer l'ancien avatar après commit
+            // Vider le cache et recharger
+            $profile->clearAvatarCache();
+            $this->mount();
 
-            // Message de succès et event pour le toast
+            // Notifications
             session()->flash('success', 'Profil mis à jour avec succès !');
             $this->dispatch('profile-updated');
-
-            // Rafraîchir le composant pour afficher le nouvel avatar
-            $this->mount();
 
         } catch (\Illuminate\Validation\ValidationException $e) {
             DB::rollBack();
 
-            // Supprimer le nouvel avatar si uploadé
+            // Nettoyer le nouvel avatar en cas d'échec
             if (isset($newAvatarPath)) {
-                Storage::disk('public')->delete($newAvatarPath);
+                \Storage::disk('public')->delete($newAvatarPath);
             }
 
-            // Relancer l'exception pour afficher les erreurs de validation
             throw $e;
 
         } catch (\Exception $e) {
             DB::rollBack();
 
-            // Supprimer le nouvel avatar en cas d'erreur
             if (isset($newAvatarPath)) {
-                Storage::disk('public')->delete($newAvatarPath);
+                \Storage::disk('public')->delete($newAvatarPath);
             }
 
-            Log::error('Erreur lors de la mise à jour du profil', [
+            Log::error('Erreur mise à jour profil', [
                 'user_id' => auth()->id(),
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
 
-            session()->flash('error', 'Une erreur est survenue lors de la mise à jour de votre profil.');
+            session()->flash('error', 'Une erreur est survenue lors de la mise à jour.');
         }
     }
 
     /**
-     * Send an email verification notification to the current user.
+     * Supprime l'avatar actuel.
+     */
+    public function removeAvatar(): void
+    {
+        try {
+            DB::beginTransaction();
+
+            $profile = auth()->user()->profile;
+            $oldAvatarPath = $profile->getRawOriginal('avatar');
+
+            if ($oldAvatarPath) {
+                $profile->update(['avatar' => null]);
+                $profile->deleteAvatarFile($oldAvatarPath);
+                $profile->clearAvatarCache();
+            }
+
+            DB::commit();
+
+            $this->mount();
+            session()->flash('success', 'Avatar supprimé avec succès !');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            Log::error('Erreur suppression avatar', [
+                'user_id' => auth()->id(),
+                'error' => $e->getMessage()
+            ]);
+
+            session()->flash('error', 'Erreur lors de la suppression de l\'avatar.');
+        }
+    }
+
+    /**
+     * Envoie une notification de vérification d'email.
      */
     public function resendVerificationNotification(): void
     {
@@ -121,57 +158,67 @@ new class extends Component {
 <x-layouts.content :heading="__('Paramètres')" :subheading="__('Gérez votre profil')" :pageHeading="__('Profil')"
     :pageSubheading="__('Mettez à jour les informations de votre profil et votre avatar.')">
 
-    
-
-
-
     <form wire:submit="updateProfile" class="my-6 w-full space-y-6">
 
         <div class="grid grid-cols-1 gap-6 sm:grid-cols-6">
 
             <!-- Section Avatar -->
-            <div class="sm:col-span-2 flex items-center gap-x-2">
+            <div class="sm:col-span-2 flex flex-col items-start gap-4">
                 <div class="size-24 relative">
                     @if ($form->avatar)
-                        <!-- Aperçu du nouvel avatar -->
-                        <img src="{{ $form->avatar->temporaryUrl() }}" alt="Aperçu de l'avatar"
+                        <img src="{{ $form->avatar->temporaryUrl() }}" alt="Aperçu"
                             class="h-24 w-24 flex-none mask mask-squircle bg-gray-800 object-cover">
                     @else
-                        <!-- Avatar actuel -->
-                        <img src="{{ auth()->user()->avatar }}" alt="Avatar actuel"
+                        <img src="{{ $currentAvatarUrl }}" alt="Avatar actuel"
                             class="h-24 w-24 flex-none mask mask-squircle bg-gray-800 object-cover">
                     @endif
-                        <flux:button type="button" label="Changer l'avatar" class="bg-transparent! size-24! cursor-pointer border-none! absolute! top-0! left-0!"
-                            onclick="document.getElementById('avatarInput').click()" />
+
+                    <flux:button type="button"
+                        class="bg-transparent! size-24! cursor-pointer border-none! absolute! top-0! left-0!"
+                        onclick="document.getElementById('avatarInput').click()" aria-label="Changer l'avatar" />
                 </div>
 
-                <flux:text sm color="muted">JPG, GIF ou PNG. 2MB maximum.</flux:text>
+                <div class="flex gap-2">
+                    <flux:button type="button" size="sm" variant="ghost"
+                        onclick="document.getElementById('avatarInput').click()">
+                        Changer
+                    </flux:button>
+
+                    @if(auth()->user()->profile?->getRawOriginal('avatar'))
+                        <flux:button type="button" size="sm" variant="danger" wire:click="removeAvatar"
+                            wire:confirm="Êtes-vous sûr de vouloir supprimer votre avatar ?">
+                            Supprimer
+                        </flux:button>
+                    @endif
+                </div>
+
+                <flux:text sm color="muted">JPG, PNG ou WEBP. 2MB maximum.</flux:text>
 
                 <input type="file" wire:model="form.avatar" id="avatarInput"
-                    accept="image/jpeg,image/jpg,image/png,image/gif" class="hidden" />
+                    accept="image/jpeg,image/jpg,image/png,image/webp" class="hidden" />
 
                 @error('form.avatar')
-                    <span class="text-red-500 text-sm mt-2 block">{{ $message }}</span>
+                    <span class="text-red-500 text-sm">{{ $message }}</span>
                 @enderror
             </div>
 
             <!-- Champs du formulaire -->
             <div class="col-span-4">
-                <flux:textarea wire:model="form.bio" label="Biographie" rows="4" />
-            </div>
-
-
-            <div class="sm:col-span-2">
-                <flux:input wire:model="form.full_name" :label="__('Nom complet')" type="text" required autofocus />
+                <flux:textarea wire:model="form.bio" label="Biographie" rows="4" placeholder="Parlez-nous de vous..." />
             </div>
 
             <div class="sm:col-span-2">
-                <flux:input wire:model="form.date_of_birth" type="date" label="Date de naissance"
-                    :max="date('Y-m-d')" />
+                <flux:input wire:model="form.full_name" label="Nom complet" type="text" required />
             </div>
 
             <div class="sm:col-span-2">
-                <flux:input wire:model="form.phone" label="Téléphone" type="tel" required />
+                <flux:input wire:model="form.date_of_birth" type="date" label="Date de naissance" :max="date('Y-m-d')"
+                    required />
+            </div>
+
+            <div class="sm:col-span-2">
+                <flux:input wire:model="form.phone" label="Téléphone" type="tel" required
+                    placeholder="+225 XX XX XX XX XX" />
             </div>
 
             <div class="sm:col-span-2">
@@ -183,7 +230,7 @@ new class extends Component {
             </div>
 
             <div class="sm:col-span-2">
-                <flux:input wire:model="form.country" label="Pays" />
+                <flux:input wire:model="form.country" label="Pays" required />
             </div>
         </div>
 

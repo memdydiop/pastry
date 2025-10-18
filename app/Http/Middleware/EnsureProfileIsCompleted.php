@@ -10,47 +10,57 @@ use Symfony\Component\HttpFoundation\Response;
 class EnsureProfileIsCompleted
 {
     /**
-     * 💡 Constante pour l'itinéraire de redirection de complétion du profil.
-     * Centralise la configuration de la route.
+     * Route de redirection pour complétion du profil.
      */
     protected const COMPLETION_ROUTE = 'profile.create';
+
     /**
-     * Handle an incoming request.
-     *
-     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
+     * Routes exclues de la vérification.
+     */
+    protected const EXCLUDED_ROUTES = [
+        'profile.create',
+        'profile.store',
+        'profile.update',
+        'logout',
+        'verification.*',
+        'livewire.*',
+        'password.*',
+    ];
+
+    /**
+     * Traite une requête entrante.
      */
     public function handle(Request $request, Closure $next): Response
     {
-        
         $user = Auth::user();
 
-        // Si l'utilisateur n'est pas authentifié, laisser passer
-        if (! $user) {
+        // Ce middleware doit être appliqué après 'auth'
+        // donc $user ne devrait jamais être null
+        if (!$user) {
             return $next($request);
         }
 
-        $profileIsComplete = $user->profile_completed;
-
-        // Routes à exclure de la redirection
-        $excludedRoutes = [
-            self::COMPLETION_ROUTE,
-            'profile.store',
-            'profile.update',
-            'logout',
-            'verification.*',
-            'livewire.*',
-            'password.*',
-        ];
-
-        $isExcludedRoute = $request->routeIs($excludedRoutes);
-
-        // Si le profil n'est pas complet et que la route n'est pas exclue
-        if (! $profileIsComplete && ! $isExcludedRoute) {
-            return redirect()
-                ->route(self::COMPLETION_ROUTE)
-                ->with('warning', 'Veuillez compléter votre profil pour continuer.');
+        // Si le profil est complété, continuer normalement
+        if ($user->profile_completed) {
+            return $next($request);
         }
 
-        return $next($request);
+        // Si la route actuelle est exclue, continuer
+        if ($this->isExcludedRoute($request)) {
+            return $next($request);
+        }
+
+        // Rediriger vers la page de complétion du profil
+        return redirect()
+            ->route(self::COMPLETION_ROUTE)
+            ->with('warning', 'Veuillez compléter votre profil pour continuer.');
+    }
+
+    /**
+     * Vérifie si la route actuelle est exclue.
+     */
+    protected function isExcludedRoute(Request $request): bool
+    {
+        return $request->routeIs(self::EXCLUDED_ROUTES);
     }
 }

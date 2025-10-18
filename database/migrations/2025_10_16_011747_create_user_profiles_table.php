@@ -6,29 +6,32 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('user_profiles', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->foreignId('user_id')
+                ->constrained()
+                ->onDelete('cascade')
+                ->index();
+            
+            // Tous les champs sont required pour cohérence avec la validation
             $table->string('full_name');
-            $table->date('date_of_birth')->required();
-            $table->string('phone',  20)->unique()->index('phone');
+            $table->date('date_of_birth');
+            $table->string('phone', 20)->unique();
             $table->string('address', 255);
-            $table->string('city',100);
-            $table->string('country', 100)->required();
-            $table->text('bio')->required();
+            $table->string('city', 100);
+            $table->string('country', 100);
+            $table->text('bio');
             $table->string('avatar')->nullable();
+            
             $table->timestamps();
+            
+            // Index pour améliorer les performances
+            $table->index(['user_id', 'created_at']);
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('user_profiles');
