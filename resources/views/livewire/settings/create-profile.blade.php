@@ -101,7 +101,7 @@ new #[Layout('components.layouts.auth')]
             autofocus placeholder="Nom Complet" />
 
         <!-- Date de naissance -->
-        <flux:input wire:model="form.date_of_birth" :label="__('Date de naissance (optionnel)')" name="date_of_birth"
+        <flux:input wire:model="form.date_of_birth" :label="__('Date de naissance')" name="date_of_birth"
             type="date" :max="date('Y-m-d')" placeholder="Date de naissance" />
 
         <!-- Téléphone -->
@@ -116,17 +116,17 @@ new #[Layout('components.layouts.auth')]
         <flux:input wire:model="form.city" :label="__('Ville')" name="city" type="text" required placeholder="Ville" />
 
         <!-- Pays -->
-        <flux:input wire:model="form.country" :label="__('Pays (optionnel)')" name="country" type="text"
+        <flux:input wire:model="form.country" :label="__('Pays')" name="country" type="text"
             placeholder="Pays" />
 
         <!-- Biographie -->
-        <flux:textarea wire:model="form.bio" :label="__('Biographie (optionnel)')" name="bio" rows="4"
+        <flux:textarea wire:model="form.bio" :label="__('Biographie')" name="bio" rows="4"
             placeholder="Parlez-nous de vous..." />
 
         <!-- Avatar -->
         <div>
             <label for="avatar" class="block text-sm font-medium text-gray-700 mb-2">
-                {{ __('Photo de profil (optionnel)') }}
+                {{ __('Photo de profil') }}
             </label>
         
             {{-- Bloc d'aperçu de l'image --}}

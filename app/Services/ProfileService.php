@@ -1,9 +1,11 @@
+// Fichier : app/Services/ProfileService.php
+
 <?php
 
 namespace App\Services;
 
 use App\Models\User;
-use App\Models\UserProfile;
+use App\Models\UserProfile; // Assurez-vous que cette ligne est présente
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -49,9 +51,9 @@ class ProfileService
             if ($avatar) {
                 $data['avatar'] = $this->uploadAvatar($avatar);
                 
-                // Supprimer l'ancien avatar
+                // Supprimer l'ancien avatar en utilisant la méthode du modèle
                 if ($oldAvatarPath) {
-                    $this->deleteAvatar($oldAvatarPath);
+                    $profile->deleteAvatarFile($oldAvatarPath);
                 }
             }
 
@@ -78,7 +80,8 @@ class ProfileService
 
             if ($avatarPath) {
                 $profile->update(['avatar' => null]);
-                $this->deleteAvatar($avatarPath);
+                // Suppression du fichier via la méthode du modèle
+                $profile->deleteAvatarFile($avatarPath);
                 $profile->clearAvatarCache();
 
                 Log::info('Avatar supprimé', ['user_id' => $profile->user_id]);
@@ -101,24 +104,8 @@ class ProfileService
         return $file->storeAs('avatars', $filename, 'public');
     }
 
-    /**
-     * Supprime un fichier avatar.
-     */
-    protected function deleteAvatar(string $path): bool
-    {
-        try {
-            if (Storage::disk('public')->exists($path)) {
-                return Storage::disk('public')->delete($path);
-            }
-        } catch (\Exception $e) {
-            Log::error('Erreur suppression avatar', [
-                'path' => $path,
-                'error' => $e->getMessage(),
-            ]);
-        }
-
-        return false;
-    }
+    // REMARQUE : La méthode deleteAvatar() a été supprimée, 
+    // car la logique est maintenant gérée par UserProfile::deleteAvatarFile().
 
     /**
      * Vérifie si un profil est complet.
@@ -129,17 +116,8 @@ class ProfileService
             return false;
         }
 
-        $requiredFields = [
-            'full_name',
-            'date_of_birth',
-            'phone',
-            'address',
-            'city',
-            'country',
-            'bio',
-        ];
-
-        foreach ($requiredFields as $field) {
+        // Utilisation de la constante centralisée
+        foreach (UserProfile::REQUIRED_FIELDS as $field) {
             if (empty($user->profile->$field)) {
                 return false;
             }

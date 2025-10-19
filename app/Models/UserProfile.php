@@ -10,7 +10,19 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class UserProfile extends Model
-{
+{/**
+     * Champs de profil requis pour la complétion.
+     */
+    public const REQUIRED_FIELDS = [
+        'full_name',
+        'date_of_birth',
+        'phone',
+        'address',
+        'city',
+        'country',
+        'bio',
+    ];
+    
     protected $touches = ['user'];
 
     protected $fillable = [
@@ -48,10 +60,11 @@ class UserProfile extends Model
 
     protected function avatar(): Attribute
     {
-        return Attribute::make(
-            get: function ($value) {
-                $cacheKey = "user:{$this->user_id}:avatar";
+    return Attribute::make(
+        get: function ($value) {
+            $cacheKey = "user:{$this->user_id}:avatar";
 
+            return Cache::lock($cacheKey . ':lock', 5)->get(function () use ($cacheKey, $value) {
                 return Cache::remember($cacheKey, 3600, function () use ($value) {
                     if ($value && Storage::disk('public')->exists($value)) {
                         return Storage::disk('public')->url($value);
@@ -66,9 +79,10 @@ class UserProfile extends Model
                         $bgColor
                     );
                 });
-            }
-        );
-    }
+            });
+        }
+    );
+}
 
     /**
      * ✅ CORRECTION : Vide uniquement le cache, pas le fichier

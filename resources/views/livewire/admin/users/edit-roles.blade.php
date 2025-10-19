@@ -1,9 +1,9 @@
 <?php
 
 use Livewire\Volt\Component;
+use Livewire\Attributes\On;
 use App\Models\User;
 use Spatie\Permission\Models\Role;
-use Livewire\Attributes\On;
 use Livewire\Attributes\Validate;
 use Illuminate\Support\Facades\Gate;
 

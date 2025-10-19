@@ -45,24 +45,16 @@ class UserProfileObserver
 
     public function deleted(UserProfile $userProfile): void
     {
-        // $avatarPath = $userProfile->getAvatarPathAttribute();
-
-        // if ($avatarPath) {
-        //     try {
-        //         $userProfile->deleteAvatarFile($avatarPath);
-        //         Log::info('Avatar supprimé lors de la suppression du profil', [
-        //             'user_id' => $userProfile->user_id,
-        //         ]);
-        //     } catch (\Exception $e) {
-        //         Log::error('Erreur suppression avatar', [
-        //             'user_id' => $userProfile->user_id,
-        //             'error' => $e->getMessage(),
-        //         ]);
-        //     }
-        // }
-
-        if ($userProfile->avatar && Storage::disk('public')->exists($userProfile->avatar)) {
-            Storage::disk('public')->delete($userProfile->avatar);
+        $avatarPath = $userProfile->getRawOriginal('avatar');
+        
+        if ($avatarPath && Storage::disk('public')->exists($avatarPath)) {
+            Storage::disk('public')->delete($avatarPath);
+            
+            Log::info('Avatar supprimé lors de la suppression du profil', [
+                'user_id' => $userProfile->user_id,
+                'path' => $avatarPath,
+            ]);
         }
+
     }
 }

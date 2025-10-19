@@ -56,18 +56,23 @@ new #[Title('Gestion des utilisateurs')]
             return ['users' => collect()];
         }
 
-        $users = User::with('roles')
+        $users = User::with(['roles', 'profile'])
+            ->select([
+                'users.*',
+                'email_verified_at',
+                'two_factor_confirmed_at',
+                'two_factor_secret',
+                'created_at',
+                'profile_completed'
+            ])
             ->when($this->search, function (Builder $query, $search) {
                 $query->where('email', 'like', "%{$search}%")
                     ->orWhereHas('profile', function (Builder $query) use ($search) {
-                        $query->where('first_name', 'like', "%{$search}%")
-                            ->orWhere('last_name', 'like', "%{$search}%");
+                        $query->where('full_name', 'like', "%{$search}%");
                     });
             })
-            ->when($this->roleFilter, function (Builder $query, $role) {
-                $query->role($role);
-            })
-            ->orderBy('created_at', 'asc')
+            ->when($this->roleFilter, fn(Builder $query, $role) => $query->role($role))
+            ->orderBy('created_at', 'desc')
             ->paginate($this->perPage);
 
         return [

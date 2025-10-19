@@ -40,67 +40,22 @@ new class extends Component {
     /**
      * Met à jour le profil avec gestion transactionnelle.
      */
-    public function updateProfile(): void
+    public function updateProfile(ProfileService $profileService): void
     {
-        // Validation
         $validatedData = $this->form->validate();
-        $preparedData = $this->form->prepareForSave();
 
         try {
-            DB::beginTransaction();
+            $profileService->updateProfile(
+                auth()->user()->profile,
+                $this->form->prepareForSave(),
+                $this->form->avatar
+            );
 
-            $profile = auth()->user()->profile;
-            $oldAvatarPath = $profile->getRawOriginal('avatar');
-            $newAvatarPath = null;
-
-            // Upload du nouvel avatar si fourni
-            if ($this->form->avatar) {
-                $newAvatarPath = $this->form->avatar->store('avatars', 'public');
-                $preparedData['avatar'] = $newAvatarPath;
-            }
-
-            // Mise à jour du profil
-            $profile->update($preparedData);
-
-            // Suppression manuelle de l'ancien avatar si remplacé
-            if ($newAvatarPath && $oldAvatarPath && $oldAvatarPath !== $newAvatarPath) {
-                $profile->deleteAvatarFile($oldAvatarPath);
-            }
-
-            DB::commit();
-
-            // Vider le cache et recharger
-            $profile->clearAvatarCache();
             $this->mount();
-
-            // Notifications
             session()->flash('success', 'Profil mis à jour avec succès !');
-            $this->dispatch('profile-updated');
-
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            DB::rollBack();
-
-            // Nettoyer le nouvel avatar en cas d'échec
-            if (isset($newAvatarPath)) {
-                \Storage::disk('public')->delete($newAvatarPath);
-            }
-
-            throw $e;
 
         } catch (\Exception $e) {
-            DB::rollBack();
-
-            if (isset($newAvatarPath)) {
-                \Storage::disk('public')->delete($newAvatarPath);
-            }
-
-            Log::error('Erreur mise à jour profil', [
-                'user_id' => auth()->id(),
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-
-            session()->flash('error', 'Une erreur est survenue lors de la mise à jour.');
+            session()->flash('error', 'Erreur lors de la mise à jour.');
         }
     }
 

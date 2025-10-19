@@ -11,6 +11,7 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 use App\Models\UserProfile;
+use Illuminate\Support\Facades\Cache;
 use Spatie\Permission\Traits\HasRoles;
 
 /**
@@ -58,17 +59,33 @@ class User extends Authenticatable
             'password' => 'hashed',
             'profile_completed' => 'boolean',
         ];
-    }
+    }/**
+     * The accessors to append to the model's array form.
+     *
+     * @var array
+     */
+    protected $appends = [ // ⬅️ AJOUTÉ
+        'is_admin',
+    ];
     
     /**
      * Accesseur pour vérifier si l'utilisateur est un administrateur.
      */
     protected function getIsAdminAttribute(): bool
     {
-        // Vérifie si l'utilisateur possède le rôle 'admin' ou 'Ghost'
-        return $this->hasAnyRole(['admin', 'Ghost']);
+        return Cache::remember(
+            "user:{$this->id}:is_admin",
+            now()->addHour(),
+            fn() => $this->hasAnyRole(['admin', 'Ghost'])
+        );
     }
-
+    // Invalider le cache lors de changements de rôles
+    protected static function booted()
+    {
+        static::saved(function (User $user) {
+            Cache::forget("user:{$user->id}:is_admin");
+        });
+    }
     /**
      * Obtenir le profil associé à l'utilisateur.
      */
