@@ -9,6 +9,7 @@ use Livewire\Attributes\Url;
 use Livewire\Attributes\On; // Ajouté pour l'écoute
 use Spatie\Permission\Models\Role;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Gate;
 
 new #[Title('Gestion des utilisateurs')]
     class extends Component {
@@ -39,11 +40,22 @@ new #[Title('Gestion des utilisateurs')]
 
     public function mount(): void
     {
+
+        // Vérifie la permission d'accès à la page
+        Gate::authorize('view users'); // ⬅️ Utilisation de Gate::authorize
+
         $this->availableRoles = Role::pluck('name', 'name')->toArray();
     }
 
     public function with(): array
     {
+
+        // Le with() est appelé même si l'utilisateur n'a pas la permission, 
+        // donc on peut retourner une collection vide si l'accès a échoué au mount.
+        if (!Gate::allows('view users')) {
+            return ['users' => collect()];
+        }
+
         $users = User::with('roles')
             ->when($this->search, function (Builder $query, $search) {
                 $query->where('email', 'like', "%{$search}%")
@@ -63,13 +75,13 @@ new #[Title('Gestion des utilisateurs')]
         ];
     }
 
+    /**
+     * Méthode de suppression d'utilisateur (avec vérifications de sécurité).
+     */
     public function deleteUser(int $userId): void
     {
-        // Vérification de permission et d'auto-suppression
-        if (!auth()->user()->can('delete users')) {
-            session()->flash('error', 'Vous n\'êtes pas autorisé à supprimer des utilisateurs.');
-            return;
-        }
+        // ⬅️ Utilisation de Gate::authorize pour lever automatiquement une exception 403
+        Gate::authorize('delete users');
 
         $user = User::find($userId);
 
@@ -91,12 +103,13 @@ new #[Title('Gestion des utilisateurs')]
 <x-layouts.content :heading="__('Utilisateurs')" :subheading="__('Gestion des Utilisateur')" :pageHeading="__('Profil')"
     :pageSubheading="__('Mettez à jour les informations de votre profil et votre avatar.')">
 
-    <x-slot name="actions" class="flex gap-x-2">
+    <x-slot name="actions" class="flex gap-x-2">{{-- Utilisation de @can pour cacher le bouton si la permission manque --}}
+    @can('create users')
         <flux:button href="#">
             <flux:icon.user-plus class="w-5 h-5" />
             Ajouter un utilisateur
         </flux:button>
-    </x-slot>
+    @endcan</x-slot>
 
     {{-- Affichage des messages flash pour la suppression --}}
     @if (session()->has('success') || session()->has('error'))
@@ -196,7 +209,7 @@ new #[Title('Gestion des utilisateurs')]
                                         <div class="flex flex-col">
                                             <flux:heading class="">
                                                 {{ $user->name }}
-                                                @if ($user->id === auth()->id())
+                                                @if ($user->is(auth()->user()))
                                                     <flux:badge size="sm" color="blue" class=" rounded-full! p-0! size-2 bg-success  ">
 
                                                     </flux:badge>
@@ -256,7 +269,7 @@ new #[Title('Gestion des utilisateurs')]
 
                                         <flux:modal.trigger name="edit-profile">
                                             <flux:button icon="ellipsis-vertical" size="sm" variant="ghost" title="Actions" inset>
-                                                
+
                                             </flux:button>
                                         </flux:modal.trigger>
 
@@ -271,7 +284,7 @@ new #[Title('Gestion des utilisateurs')]
                                                 @endcan
 
                                                 {{-- Option Supprimer --}}
-                                                @if ($user->id !== auth()->id() && auth()->user()->can('delete users'))
+                                                @if ($user->id !== auth()->id() && Gate::allows('delete users'))
                                                     <flux:menu.separator />
                                                     <flux:menu.item wire:click="deleteUser({{ $user->id }})"
                                                         class="text-danger"

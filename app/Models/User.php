@@ -59,6 +59,15 @@ class User extends Authenticatable
             'profile_completed' => 'boolean',
         ];
     }
+    
+    /**
+     * Accesseur pour vérifier si l'utilisateur est un administrateur.
+     */
+    protected function getIsAdminAttribute(): bool
+    {
+        // Vérifie si l'utilisateur possède le rôle 'admin' ou 'Ghost'
+        return $this->hasAnyRole(['admin', 'Ghost']);
+    }
 
     /**
      * Obtenir le profil associé à l'utilisateur.

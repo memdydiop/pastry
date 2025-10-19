@@ -4,6 +4,7 @@ namespace App\Observers;
 
 use App\Models\UserProfile;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class UserProfileObserver
 {
@@ -44,20 +45,24 @@ class UserProfileObserver
 
     public function deleted(UserProfile $userProfile): void
     {
-        $avatarPath = $userProfile->getAvatarPathAttribute();
+        // $avatarPath = $userProfile->getAvatarPathAttribute();
 
-        if ($avatarPath) {
-            try {
-                $userProfile->deleteAvatarFile($avatarPath);
-                Log::info('Avatar supprimé lors de la suppression du profil', [
-                    'user_id' => $userProfile->user_id,
-                ]);
-            } catch (\Exception $e) {
-                Log::error('Erreur suppression avatar', [
-                    'user_id' => $userProfile->user_id,
-                    'error' => $e->getMessage(),
-                ]);
-            }
+        // if ($avatarPath) {
+        //     try {
+        //         $userProfile->deleteAvatarFile($avatarPath);
+        //         Log::info('Avatar supprimé lors de la suppression du profil', [
+        //             'user_id' => $userProfile->user_id,
+        //         ]);
+        //     } catch (\Exception $e) {
+        //         Log::error('Erreur suppression avatar', [
+        //             'user_id' => $userProfile->user_id,
+        //             'error' => $e->getMessage(),
+        //         ]);
+        //     }
+        // }
+
+        if ($userProfile->avatar && Storage::disk('public')->exists($userProfile->avatar)) {
+            Storage::disk('public')->delete($userProfile->avatar);
         }
     }
 }
