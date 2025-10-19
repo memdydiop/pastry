@@ -40,6 +40,11 @@ Route::middleware(['auth', 'verified', 'profile.completed'])->group(function () 
             )
             ->name('two-factor');
     });
+    
+    Route::prefix('admin')->as('admin.')->middleware('role:Ghost')->group(function () {
+        Volt::route('users', 'admin.users.index')->name('users.index');
+        // Vous pouvez ajouter d'autres routes comme 'users.create', 'users.edit', etc.
+    });
 
 });
 

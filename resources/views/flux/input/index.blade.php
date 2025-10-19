@@ -107,8 +107,8 @@
             'filled'  => 'bg-slate-800/5',
         })
         ->add(match ($variant) { // Text color
-            'outline' => 'text-slate-600 disabled:text-muted placeholder-muted disabled:placeholder-muted/70',
-            'filled'  => 'text-slate-600 placeholder-muted disabled:placeholder-muted',
+            'outline' => 'text-slate-600 disabled:text-muted placeholder:text-muted disabled:placeholder-muted/70',
+            'filled'  => 'text-slate-600 placeholder:text-muted disabled:placeholder-muted',
         })
         ->add(match ($variant) { // Border...
             'outline' => $invalid ? 'border-red-500' : 'border-slate-200 disabled:border-b-slate-200',

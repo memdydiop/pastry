@@ -19,6 +19,12 @@
                     wire:navigate>
                     {{ __('Dashboard') }}
                 </flux:navlist.item>
+            @role('Ghost')
+                <flux:navlist.item icon="users" :href="route('admin.users.index')" :current="request()->routeIs('admin.users.*')"
+                    wire:navigate>
+                    {{ __('Gestion des Utilisateurs') }}
+                </flux:navlist.item>
+            @endrole
             </flux:navlist.group>
         </flux:navlist>
 
@@ -38,9 +44,12 @@
 
         <!-- Desktop User Menu -->
         <flux:dropdown class="hidden lg:block" position="bottom" align="start">
-            <flux:profile :name="auth()->user()->name" :avatar="auth()->user()->avatar"
+            <flux:profile :name="auth()->user()->name" 
+                :avatar="auth()->user()->avatar"
                 :initials="auth()->user()->initials()" icon-trailing="chevrons-up-down"
                 data-test="sidebar-menu-button" />
+
+                
 
             <x-user-dropdown-menu />
         </flux:dropdown>

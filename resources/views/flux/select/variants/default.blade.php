@@ -14,18 +14,18 @@ $classes = Flux::classes()
     ->add('appearance-none') // Strip the browser's default <select> styles...
     ->add('w-full ps-3 pe-10 block')
     ->add(match ($size) {
-        default => 'h-10 py-2 text-base sm:text-sm leading-[1.375rem] rounded-lg',
-        'sm' => 'h-8 py-1.5 text-sm leading-[1.125rem] rounded-md',
-        'xs' => 'h-6 text-xs leading-[1.125rem] rounded-md',
+        default => 'h-8 py-1 text-base sm:text-sm leading-[1.375rem] rounded',
+        'sm' => 'h-8 py-1.5 text-sm leading-[1.125rem] rounded',
+        'xs' => 'h-6 text-xs leading-[1.125rem] rounded',
     })
     ->add('shadow-xs border')
     ->add('bg-white')
-    ->add('text-zinc-700 disabled:text-zinc-500')
+    ->add('text-slate-600 disabled:text-muted placeholder:text-muted disabled:placeholder-muted/70')
     // Make the placeholder match the text color of standard input placeholders...
     ->add('disabled:shadow-none')
     ->add($invalid
         ? 'border border-red-500'
-        : 'border border-zinc-200 border-b-zinc-300/80'
+        : 'border border-slate-200 border-b-slate-300/80'
     )
 @endphp
 

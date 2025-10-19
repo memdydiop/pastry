@@ -75,7 +75,7 @@ $classes = Flux::classes()
     })
     ->add('relative flex-none isolate flex items-center justify-center')
     ->add('[:where(&)]:font-medium')
-    ->add('rounded-[var(--avatar-radius)]')
+    ->add('mask mask-squircle')
     ->add($hasTextContent ? '[:where(&)]:bg-transparent[:where(&)]:text-zinc-800' : '')
     ->add(match($color) {
         'red' => 'bg-red-200 text-red-800',

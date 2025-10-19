@@ -6,7 +6,7 @@
             <flux:text sm color="muted">{{ $subheading ?? '' }}</flux:text>
         </div>
 
-        <div class="px-4">
+        <div class="px-4 space-y-6">
             <div class="flex items-center justify-between">
                 <div class="">
                     <flux:heading size="lg" class="mb-1! leading-[1.2]">{{ $pageHeading ?? '' }}</flux:heading>

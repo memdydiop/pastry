@@ -128,21 +128,37 @@ new #[Layout('components.layouts.auth')]
             <label for="avatar" class="block text-sm font-medium text-gray-700 mb-2">
                 {{ __('Photo de profil (optionnel)') }}
             </label>
-
-            
-
+        
+            {{-- Bloc d'aperçu de l'image --}}
+            @if ($form->avatar)
+                <div class="mb-4 flex items-center space-x-4">
+                    {{-- Affiche l'image en utilisant l'URL temporaire de Livewire --}}
+                    <img src="{{ $form->avatar->temporaryUrl() }}" alt="{{ __('Aperçu de l\'avatar') }}"
+                        class="w-20 h-20 rounded-full object-cover border border-gray-200 shadow-sm">
+                    {{-- Bouton pour retirer la sélection du fichier --}}
+                    <flux:button wire:click="$set('form.avatar', null)" type="button" variant="danger" size="sm">
+                        {{ __('Retirer') }}
+                    </flux:button>
+                </div>
+            @endif
+        
             <input type="file" wire:model="form.avatar" name="avatar" id="avatar"
-                accept="image/jpeg,image/jpg,image/png,image/gif" class="block w-full text-sm text-gray-500 
-                       file:mr-4 file:py-2 file:px-4 
-                       file:rounded-full file:border-0 
-                       file:text-sm file:font-semibold 
-                       file:bg-blue-50 file:text-blue-700 
-                       hover:file:bg-blue-100" />
-
+                accept="image/jpeg,image/jpg,image/png,image/webp" {{-- Mise à jour des formats acceptés --}} class="block w-full text-sm text-gray-500 
+                               file:mr-4 file:py-2 file:px-4 
+                               file:rounded-full file:border-0 
+                               file:text-sm file:font-semibold 
+                               file:bg-blue-50 file:text-blue-700 
+                               hover:file:bg-blue-100" />
+        
             <p class="mt-1 text-xs text-gray-500">
-                JPG, PNG, GIF. 2MB maximum.
+                JPG, PNG, WEBP. 2MB maximum.
             </p>
-
+        
+            {{-- Indicateur de chargement Livewire --}}
+            <div wire:loading wire:target="form.avatar" class="mt-2 text-sm text-blue-500">
+                {{ __('Téléchargement de l\'avatar en cours...') }}
+            </div>
+        
             @error('form.avatar')
                 <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span>
             @enderror

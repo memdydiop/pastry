@@ -153,6 +153,7 @@ select:focus[data-flux-control] {
     mask-size: contain;
     -webkit-mask-repeat: no-repeat;
     mask-repeat: no-repeat;
+    @apply bg-accent;
 }
 
 .mask-squircle {
