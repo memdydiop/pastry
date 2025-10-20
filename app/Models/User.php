@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -14,32 +13,16 @@ use App\Models\UserProfile;
 use Illuminate\Support\Facades\Cache;
 use Spatie\Permission\Traits\HasRoles;
 
-/**
- * The attributes that are mass assignable.
- *
- * @var list<string>
- */
 class User extends Authenticatable
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable, TwoFactorAuthenticatable, HasRoles;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var list<string>
-     */
     protected $fillable = [
         'email',
         'password',
         'profile_completed',
     ];
 
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var list<string>
-     */
     protected $hidden = [
         'password',
         'two_factor_secret',
@@ -47,11 +30,10 @@ class User extends Authenticatable
         'remember_token',
     ];
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
+    protected $appends = [
+        'is_admin',
+    ];
+
     protected function casts(): array
     {
         return [
@@ -59,14 +41,7 @@ class User extends Authenticatable
             'password' => 'hashed',
             'profile_completed' => 'boolean',
         ];
-    }/**
-     * The accessors to append to the model's array form.
-     *
-     * @var array
-     */
-    protected $appends = [ // ⬅️ AJOUTÉ
-        'is_admin',
-    ];
+    }
     
     /**
      * Accesseur pour vérifier si l'utilisateur est un administrateur.
@@ -79,25 +54,12 @@ class User extends Authenticatable
             fn() => $this->hasAnyRole(['admin', 'Ghost'])
         );
     }
-    // Invalider le cache lors de changements de rôles
-    protected static function booted()
-    {
-        static::saved(function (User $user) {
-            Cache::forget("user:{$user->id}:is_admin");
-        });
-    }
-    /**
-     * Obtenir le profil associé à l'utilisateur.
-     */
+
     public function profile(): HasOne
     {
         return $this->hasOne(UserProfile::class);
     }
 
-    /**
-     * Accesseur pour obtenir le nom à afficher.
-     * 
-     */
     protected function name(): Attribute
     {
         return Attribute::make(
@@ -105,10 +67,6 @@ class User extends Authenticatable
         );
     }
 
-    /**
-     * Accesseur pour obtenir l'URL de la photo de profil.
-     * 
-     */
     protected function avatar(): Attribute
     {
         return Attribute::make(
@@ -116,41 +74,31 @@ class User extends Authenticatable
         );
     }
 
-    /**
-     * Délégué pour obtenir les initiales.
-     * C'est le point d'accès unique pour toute l'application.
-     */
     public function initials(): string
     {
-        // Si le profil existe, on lui demande de calculer les initiales.
         if ($this->profile?->full_name) {
             return $this->profile->initials();
         }
 
-        // Solution de repli : calculer les initiales à partir de l'email
-        //return Str::upper(Str::substr($this->email, 0, 2));
         $prefix = Str::before($this->email, '@');
         return Str::upper(Str::substr($prefix, 0, 2) ?: 'U');
     }
 
-    /**
-     * Vider le cache de l'avatar de l'utilisateur.
-     * 
-     * @return void
-     */
     public function clearAvatarCache(): void
     {
         $this->profile?->clearAvatarCache();
     }
 
-    /**
-     * Boot method pour enregistrer les événements du modèle.
-     */
     protected static function boot()
     {
         parent::boot();
 
-        // Eager load automatiquement le profil pour éviter les N+1 queries
+        // Invalider le cache is_admin lors de la sauvegarde
+        static::saved(function (User $user) {
+            Cache::forget("user:{$user->id}:is_admin");
+        });
+
+        // Eager load automatiquement le profil
         static::retrieved(function ($user) {
             if (! $user->relationLoaded('profile')) {
                 $user->load('profile');

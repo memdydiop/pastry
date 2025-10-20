@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Livewire\Forms\ProfileForm;
+use App\Services\ProfileService;
 use Livewire\Volt\Component;
 use Livewire\WithFileUploads;
 

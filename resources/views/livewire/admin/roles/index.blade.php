@@ -80,19 +80,19 @@ new #[Title('Gestion des rôles')]
                 <table class="min-w-full divide-y divide-gray-300">
                     <thead class="bg-gray-50">
                         <tr>
-                            <th scope="col" class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900">
+                            <th scope="col" class="py-3 pl-4 pr-3 text-left text-sm font-semibold text-gray-900">
                                 Rôle
                             </th>
-                            <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
+                            <th scope="col" class="px-3 py-3 text-left text-sm font-semibold text-gray-900">
                                 Utilisateurs
                             </th>
-                            <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
+                            <th scope="col" class="px-3 py-3 text-left text-sm font-semibold text-gray-900">
                                 Permissions
                             </th>
-                            <th scope="col" class="px-3 py-3.5 text-center text-sm font-semibold text-gray-900">
+                            <th scope="col" class="px-3 py-3 text-center text-sm font-semibold text-gray-900">
                                 Statut
                             </th>
-                            <th scope="col" class="relative py-3.5 pl-3 pr-4 sm:pr-6">
+                            <th scope="col" class="relative py-3 pl-3 pr-4 sm:pr-6">
                                 <span class="sr-only">Actions</span>
                             </th>
                         </tr>
@@ -100,7 +100,7 @@ new #[Title('Gestion des rôles')]
                     <tbody class="divide-y divide-gray-200 bg-white">
                         @forelse ($roles as $role)
                             <tr wire:key="role-{{ $role->id }}" class="hover:bg-gray-50">
-                                <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm">
+                                <td class="whitespace-nowrap py-2 pl-4 pr-3 text-sm">
                                     <div class="flex items-center">
                                         <div
                                             class="flex-shrink-0 h-10 w-10 flex items-center justify-center rounded-full {{ $role->name === 'Ghost' ? 'bg-purple-100 text-purple-600' : ($role->name === 'admin' ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-600') }}">
@@ -117,14 +117,14 @@ new #[Title('Gestion des rôles')]
                                     </div>
                                 </td>
 
-                                <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                                <td class="whitespace-nowrap px-3 py-2 text-sm text-gray-500">
                                     <div class="flex items-center gap-2">
                                         <flux:icon.users class="w-4 h-4" />
                                         <span class="font-medium">{{ $role->users_count }}</span>
                                     </div>
                                 </td>
 
-                                <td class="px-3 py-4 text-sm text-gray-500">
+                                <td class="px-3 py-2 text-sm text-gray-500">
                                     <div class="flex flex-wrap gap-1">
                                         @if($role->permissions->count() > 0)
                                             <flux:badge color="secondary">
@@ -136,7 +136,7 @@ new #[Title('Gestion des rôles')]
                                     </div>
                                 </td>
 
-                                <td class="whitespace-nowrap px-3 py-4 text-sm text-center">
+                                <td class="whitespace-nowrap px-3 py-2 text-sm text-center">
                                     @if(in_array($role->name, ['Ghost', 'admin']))
                                         <flux:badge color="warning">Protégé</flux:badge>
                                     @else
@@ -144,33 +144,40 @@ new #[Title('Gestion des rôles')]
                                     @endif
                                 </td>
 
-                                <td class="whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm sm:pr-6">
+                                <td class="whitespace-nowrap py-2 pl-3 pr-4 text-right text-sm sm:pr-6">
                                     <flux:dropdown position="bottom" align="end">
                                         <flux:button icon="ellipsis-vertical" size="sm" variant="ghost" inset />
 
-                                        <flux:menu>
-                                            <div class="space-y-1">
+                                        <flux:menu class="min-w-32!">
+                                            <div class="space-y-1 flex flex-col">
                                                 @can('view roles')
-                                                    <flux:menu.item icon="eye" variant="info"
+                                                    <flux:button 
+                                                        class="w-full"
+                                                        icon="eye" variant="info"
                                                         wire:click="$dispatch('view-role-permissions', { roleId: {{ $role->id }} })">
-                                                        Voir les permissions
-                                                    </flux:menu.item>
+                                                        Permissions
+                                                    </flux:button>
                                                 @endcan
                                                 @can('edit roles')
-                                                    <flux:menu.item icon="pencil-square" variant="warning"
+                                                    <flux:button 
+                                                        icon="pencil-square" variant="warning"
                                                         wire:click="$dispatch('edit-role', { roleId: {{ $role->id }} })">
                                                         Modifier
-                                                    </flux:menu.item>
+                                                    </flux:button>
                                                 @endcan
                                             </div>
 
                                             @can('delete roles')
                                                 @if(!in_array($role->name, ['Ghost', 'admin']))
                                                     <flux:menu.separator />
-                                                    <flux:menu.item icon="trash" wire:click="deleteRole({{ $role->id }})" variant="danger"
+                                                    <flux:button 
+
+                                                        class="w-full"
+                                                        icon="trash" 
+                                                        wire:click="deleteRole({{ $role->id }})" variant="danger"
                                                         confirm="Êtes-vous sûr de vouloir supprimer ce rôle ?">
                                                         Supprimer
-                                                    </flux:menu.item>
+                                                    </flux:button>
                                                 @endif
                                             @endcan
                                         </flux:menu>

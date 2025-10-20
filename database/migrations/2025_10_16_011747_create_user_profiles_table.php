@@ -16,7 +16,7 @@ return new class extends Migration
                 ->index();
             
             // Tous les champs sont required pour cohérence avec la validation
-            $table->string('full_name');
+            $table->string('full_name')->index('full_name');
             $table->date('date_of_birth');
             $table->string('phone', 20)->unique();
             $table->string('address', 255);
@@ -26,9 +26,6 @@ return new class extends Migration
             $table->string('avatar')->nullable();
             
             $table->timestamps();
-            
-            // Index pour améliorer les performances
-            $table->index(['user_id','full_name', 'created_at']);
         });
     }
 

@@ -110,9 +110,8 @@ new #[Title('Gestion des utilisateurs')]
 
     <x-slot name="actions" class="flex gap-x-2">{{-- Utilisation de @can pour cacher le bouton si la permission manque --}}
     @can('create users')
-        <flux:button href="#">
-            <flux:icon.user-plus class="w-5 h-5" />
-            Ajouter un utilisateur
+        <flux:button icon="user-plus" variant="primary" href="#">
+            Utilisateur
         </flux:button>
     @endcan</x-slot>
 
@@ -268,39 +267,41 @@ new #[Title('Gestion des utilisateurs')]
                                 </td>
 
                                 {{-- COLONNE ACTIONS CORRIGÉE --}}
-                                <td class="whitespace-nowrap py-2 px-3 text-sm text-right sm:pr-6">
-                                    <div class="flex items-center justify-end">
-                                        <flux:dropdown>
+                                <td class="whitespace-nowrap py-4 pl-3 pr-4 text-sm text-right sm:pr-6">
+                                        <flux:dropdown position="bottom" align="end">
 
-                                        <flux:modal.trigger name="edit-profile">
-                                            <flux:button icon="ellipsis-vertical" size="sm" variant="ghost" title="Actions" inset>
+                                            <flux:button icon="ellipsis-vertical" size="sm" variant="ghost" title="Actions" inset />
 
-                                            </flux:button>
-                                        </flux:modal.trigger>
 
-                                            <flux:menu>
-                                                {{-- Ouvre la modale EditRoles --}}
-                                                @can('edit users')
-                                                    <flux:menu.item
-                                                        wire:click="$dispatch('edit-user-roles', { userId: {{ $user->id }} })">
-                                                        <flux:icon.pencil-square class="w-5 h-5" />
-                                                        Modifier rôles/permissions
-                                                    </flux:menu.item>
-                                                @endcan
+                                            <flux:menu class="min-w-32!">
+                                                <div class="space-y-1">
+                                                    {{-- Ouvre la modale EditRoles --}}
+                                                    @can('edit users')
+                                                        <flux:button
+                                                            class="w-full"
+                                                            icon="pencil-square"
+                                                            variant="info"
+                                                            wire:click="$dispatch('edit-user-roles', { userId: {{ $user->id }} })">
+                                                            Rôles
+                                                        </flux:button>
+                                                    @endcan
+                                                </div>
 
                                                 {{-- Option Supprimer --}}
                                                 @if ($user->id !== auth()->id() && Gate::allows('delete users'))
                                                     <flux:menu.separator />
-                                                    <flux:menu.item wire:click="deleteUser({{ $user->id }})"
-                                                        class="text-danger"
+                                                    <flux:button 
+                                                        class="w-full"
+                                                        icon="trash" 
+                                                        wire:click="deleteUser({{ $user->id }})"
+                                                        variant="danger"
                                                         confirm="Êtes-vous sûr de vouloir supprimer cet utilisateur ? Cette action est irréversible.">
-                                                        <flux:icon.trash class="w-5 h-5" />
                                                         Supprimer
-                                                    </flux:menu.item>
+                                                    </flux:button>
+                                                    
                                                 @endif
                                             </flux:menu>
                                         </flux:dropdown>
-                                    </div>
                                 </td>
                             </tr>
                         @empty

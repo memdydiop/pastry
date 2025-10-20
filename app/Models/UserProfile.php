@@ -10,7 +10,8 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class UserProfile extends Model
-{/**
+{
+    /**
      * Champs de profil requis pour la complétion.
      */
     public const REQUIRED_FIELDS = [
@@ -60,17 +61,15 @@ class UserProfile extends Model
 
     protected function avatar(): Attribute
     {
-    return Attribute::make(
-        //get: function ($value) {
-            //$cacheKey = "user:{$this->user_id}:avatar";
-
-            //return Cache::lock($cacheKey . ':lock', 5)->get(function () use ($cacheKey, $value) {
-                get:fn ($value) => Cache::remember("user:{$this->user_id}:avatar", 3600, 
-                    function () use ($value) {
-                        if ($value && Storage::disk('public')->exists($value)) {
-                            return Storage::disk('public')->url($value);
-                        }
-                    
+        return Attribute::make(
+            get: fn ($value) => Cache::remember(
+                "user:{$this->user_id}:avatar", 
+                3600, 
+                function () use ($value) {
+                    if ($value && Storage::disk('public')->exists($value)) {
+                        return Storage::disk('public')->url($value);
+                    }
+                
                     $initials = $this->initials() ?: 'U';
                     $bgColor = substr(hash('crc32b', (string) $this->user_id), 0, 6);
                     
@@ -79,23 +78,16 @@ class UserProfile extends Model
                         urlencode($initials),
                         $bgColor
                     );
-                })
-            //});
-        //}
-    );
-}
+                }
+            )
+        );
+    }
 
-    /**
-     * ✅ CORRECTION : Vide uniquement le cache, pas le fichier
-     */
     public function clearAvatarCache(): void
     {
         Cache::forget("user:{$this->user_id}:avatar");
     }
 
-    /**
-     * ✅ NOUVEAU : Méthode dédiée pour supprimer le fichier avatar
-     */
     public function deleteAvatarFile(?string $path = null): bool
     {
         $avatarPath = $path ?? $this->getRawOriginal('avatar');
