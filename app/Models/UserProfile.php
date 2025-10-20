@@ -61,14 +61,15 @@ class UserProfile extends Model
     protected function avatar(): Attribute
     {
     return Attribute::make(
-        get: function ($value) {
-            $cacheKey = "user:{$this->user_id}:avatar";
+        //get: function ($value) {
+            //$cacheKey = "user:{$this->user_id}:avatar";
 
-            return Cache::lock($cacheKey . ':lock', 5)->get(function () use ($cacheKey, $value) {
-                return Cache::remember($cacheKey, 3600, function () use ($value) {
-                    if ($value && Storage::disk('public')->exists($value)) {
-                        return Storage::disk('public')->url($value);
-                    }
+            //return Cache::lock($cacheKey . ':lock', 5)->get(function () use ($cacheKey, $value) {
+                get:fn ($value) => Cache::remember("user:{$this->user_id}:avatar", 3600, 
+                    function () use ($value) {
+                        if ($value && Storage::disk('public')->exists($value)) {
+                            return Storage::disk('public')->url($value);
+                        }
                     
                     $initials = $this->initials() ?: 'U';
                     $bgColor = substr(hash('crc32b', (string) $this->user_id), 0, 6);
@@ -78,9 +79,9 @@ class UserProfile extends Model
                         urlencode($initials),
                         $bgColor
                     );
-                });
-            });
-        }
+                })
+            //});
+        //}
     );
 }
 

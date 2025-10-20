@@ -1,5 +1,3 @@
-// Fichier : app/Services/ProfileService.php
-
 <?php
 
 namespace App\Services;
