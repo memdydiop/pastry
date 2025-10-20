@@ -32,7 +32,7 @@ class RolesAndPermissionsSeeder extends Seeder
         $userRole = Role::firstOrCreate(['name' => 'user']);
 
         // Assigner toutes les permissions au rôle 'Ghost'
-        $ghostRole->givePermissionTo(Permission::all());
+        //$ghostRole->givePermissionTo(Permission::all());
 
         // Le rôle 'user' n'a aucune permission spécifique pour le moment
     }

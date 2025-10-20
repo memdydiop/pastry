@@ -8,10 +8,6 @@ Route::get('/welcome', function () {
     return view('welcome');
 })->name('home');
 
-// Route::view('dashboard', 'dashboard')
-//     ->middleware(['auth', 'verified'])
-//     ->name('dashboard');
-
 // Route pour créer le profil (accessible même si profil non complété)
 Volt::route('/creer-mon-profil', 'settings/create-profile')
     ->middleware('auth')
@@ -22,13 +18,13 @@ Route::middleware(['auth', 'verified', 'profile.completed'])->group(function () 
 
     Volt::route('/', 'dashboard/index')->name('dashboard');
 
+    // User Settings
     Route::prefix('settings')->as('settings.')->group(function () {
 
         Route::redirect('settings', 'settings/profile');
         Volt::route('profile', 'settings.profile')->name('profile');
         Volt::route('password', 'settings.password')->name('password');
         Volt::route('appearance', 'settings.appearance')->name('appearance');
-
         Volt::route('two-factor', 'settings.two-factor')
             ->middleware(
                 when(
@@ -41,9 +37,18 @@ Route::middleware(['auth', 'verified', 'profile.completed'])->group(function () 
             ->name('two-factor');
     });
     
-    Route::prefix('admin')->as('admin.')->middleware('role:Ghost')->group(function () {
-        Volt::route('users', 'admin.users.index')->name('users.index');
-        // Vous pouvez ajouter d'autres routes comme 'users.create', 'users.edit', etc.
+    // Admin Routes
+    Route::prefix('admin')->as('admin.')->middleware('role:Ghost|admin')->group(function () {
+        
+        // Gestion des utilisateurs
+        Volt::route('users', 'admin.users.index')
+            ->name('users.index')
+            ->can('view users');
+        
+        // Gestion des rôles et permissions
+        Volt::route('roles', 'admin.roles.index')
+            ->name('roles.index')
+            ->can('view roles');
     });
 
 });

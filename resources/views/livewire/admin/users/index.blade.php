@@ -72,7 +72,7 @@ new #[Title('Gestion des utilisateurs')]
                     });
             })
             ->when($this->roleFilter, fn(Builder $query, $role) => $query->role($role))
-            ->orderBy('created_at', 'desc')
+            ->orderBy('created_at', 'asc')
             ->paginate($this->perPage);
 
         return [

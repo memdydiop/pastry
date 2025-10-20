@@ -29,8 +29,13 @@
         </flux:navlist>
 
         <flux:spacer />
-
         <flux:navlist variant="outline">
+            @can('view roles')
+                <flux:navlist.item icon="shield-check" :href="route('admin.roles.index')" wire:navigate :current="request()->routeIs('admin.roles.*')">
+                    
+                    Rôles & Permissions
+                </flux:navlist.item>
+            @endcan
             <flux:navlist.item icon="folder-git-2" href="https://github.com/laravel/livewire-starter-kit"
                 target="_blank">
                 {{ __('Repository') }}
