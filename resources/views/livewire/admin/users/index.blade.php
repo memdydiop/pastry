@@ -108,12 +108,11 @@ new #[Title('Gestion des utilisateurs')]
 <x-layouts.content :heading="__('Utilisateurs')" :subheading="__('Gestion des Utilisateur')" :pageHeading="__('Profil')"
     :pageSubheading="__('Mettez à jour les informations de votre profil et votre avatar.')">
 
-    <x-slot name="actions" class="flex gap-x-2">{{-- Utilisation de @can pour cacher le bouton si la permission manque --}}
-    @can('create users')
-        <flux:button icon="user-plus" variant="primary" href="#">
-            Utilisateur
-        </flux:button>
-    @endcan</x-slot>
+    <x-slot name="actions" class="flex gap-x-2">
+        @can('create users')
+            <livewire:admin.users.invite-user />
+        @endcan
+        </x-slot>
 
     {{-- Affichage des messages flash pour la suppression --}}
     @if (session()->has('success') || session()->has('error'))

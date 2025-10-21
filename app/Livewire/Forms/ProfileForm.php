@@ -43,7 +43,8 @@ class ProfileForm extends Form
                 'string', 
                 'min:8',
                 'max:20',
-                'regex:/^[\+]?[(]?[0-9]{1,4}[)]?[-\s\.]?[(]?[0-9]{1,4}[)]?[-\s\.]?[0-9]{1,9}$/',
+                //'regex:/^[\+]?[(]?[0-9]{1,4}[)]?[-\s\.]?[(]?[0-9]{1,4}[)]?[-\s\.]?[0-9]{1,9}$/',
+                'regex:/^\+?\(?\d{1,4}\)?[-\s\.]?\(?\d{1,4}\)?[-\s\.]?\d{1,9}$/',
                 Rule::unique(UserProfile::class, 'phone')->ignore($profileId)
             ],
             'address' => ['required', 'string', 'min:5', 'max:255'],

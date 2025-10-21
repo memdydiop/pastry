@@ -23,20 +23,20 @@ class DatabaseSeeder extends Seeder
         $this->command->info("✅ Utilisateur Ghost créé: ghost@user.com");
 
         // 3. Créer un admin de test
-        $admin = User::factory()->create([
-            'email' => 'admin@pastry.com',
-            //'profile_completed' => true,
-        ]);
+        //$admin = User::factory()->create([
+        //    'email' => 'admin@pastry.com',
+        //    //'profile_completed' => true,
+        //]);
         
-        $admin->assignRole('admin');
+        //$admin->assignRole('admin');
         
-        $this->command->info("✅ Utilisateur Admin créé: admin@pastry.com");
+        //$this->command->info("✅ Utilisateur Admin créé: admin@pastry.com");
 
         // 4. Créer des utilisateurs factices
-        User::factory(10)->create()->each(function ($user) {
-            $user->assignRole('user');
-        });
+        // User::factory(10)->create()->each(function ($user) {
+        //     $user->assignRole('user');
+        // });
         
-        $this->command->info("✅ 10 utilisateurs normaux créés");
+        //$this->command->info("✅ 10 utilisateurs normaux créés");
     }
 }

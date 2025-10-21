@@ -1,99 +1,84 @@
 <?php
 
-use App\Models\User;
-use Illuminate\Auth\Events\Registered;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Session;
-use Illuminate\Validation\Rules;
+use App\Livewire\Forms\Auth\RegisterForm;
+use App\Models\Invitation;
 use Livewire\Attributes\Layout;
 use Livewire\Volt\Component;
 
 new #[Layout('components.layouts.auth')] class extends Component {
-    public string $name = '';
-    public string $email = '';
-    public string $password = '';
-    public string $password_confirmation = '';
+    public RegisterForm $form;
+    public ?Invitation $invitation = null;
 
     /**
-     * Handle an incoming registration request.
+     * Mount the component and pre-fill the form.
+     */
+    public function mount(string $token = ''): void
+    {
+        // firstOrFail() va automatiquement générer une erreur 404 si le token
+        // est invalide ou si l'invitation a déjà été utilisée. C'est plus propre.
+        $this->invitation = Invitation::where('token', $token)->whereNull('registered_at')->firstOrFail();
+
+        // On assigne l'email de l'invitation au champ du formulaire.
+        // L'erreur précédente se produisait ici, mais avec une gestion propre via firstOrFail,
+        // ce code n'est atteint que si $this->invitation est valide.
+        $this->form->email = $this->invitation->email;
+    }
+
+    /**
+     * Handle the registration request.
      */
     public function register(): void
     {
-        $validated = $this->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:' . User::class],
-            'password' => ['required', 'string', 'confirmed', Rules\Password::defaults()],
-        ]);
+        // Pour une sécurité maximale, on revérifie que l'email du formulaire
+        // correspond bien à une invitation encore valide au moment de la soumission.
+        // Cela évite des manipulations entre le chargement de la page et l'envoi du formulaire.
+        $invitation = Invitation::where('email', $this->form->email)->whereNull('registered_at')->first();
 
-        event(new Registered(($user = User::create($validated))));
+        if (!$invitation) {
+            // Redirige avec une erreur si l'invitation n'est plus valide.
+            session()->flash('error', 'Ce lien d\'invitation a expiré ou a déjà été utilisé.');
+            $this->redirect(route('login'), navigate: true);
+            return;
+        }
 
-        Auth::login($user);
+        // Valide et crée l'utilisateur via l'objet Form
+        $user = $this->form->store();
 
-        Session::regenerate();
+        // Marque l'invitation comme utilisée
+        $invitation->update(['registered_at' => now()]);
 
-        $this->redirectIntended(route('dashboard', absolute: false), navigate: true);
+        // Connecte l'utilisateur
+        auth()->login($user);
+
+        // Redirige vers le tableau de bord
+        $this->redirect(
+            url: route('dashboard', absolute: false),
+            navigate: true
+        );
     }
 }; ?>
 
-<div class="flex flex-col gap-6">
-    <x-auth-header :title="__('Create an account')" :description="__('Enter your details below to create your account')" />
+<x-layouts.auth.card>
+    <x-slot name="header">
+        <x-auth-header :title="__('Créez votre compte')" :description="__('Remplissez les informations ci-dessous pour finaliser votre inscription.')" />
+    </x-slot>
 
-    <!-- Session Status -->
-    <x-auth-session-status class="text-center" :status="session('status')" />
+    <form wire:submit="register" class="space-y-6">
 
-    <form method="POST" wire:submit="register" class="flex flex-col gap-6">
-        <!-- Name -->
-        <flux:input
-            wire:model="name"
-            :label="__('Name')"
-            type="text"
-            required
-            autofocus
-            autocomplete="name"
-            :placeholder="__('Full name')"
-        />
+        {{-- Email Address --}}
+        <flux:input wire:model="form.email" label="Adresse Email" type="email" name="email" required readonly
+            autocomplete="username" />
 
-        <!-- Email Address -->
-        <flux:input
-            wire:model="email"
-            :label="__('Email address')"
-            type="email"
-            required
-            autocomplete="email"
-            placeholder="email@example.com"
-        />
+        {{-- Password --}}
+        <flux:input wire:model="form.password" label="Mot de passe" type="password" name="password" required
+            autocomplete="new-password" />
 
-        <!-- Password -->
-        <flux:input
-            wire:model="password"
-            :label="__('Password')"
-            type="password"
-            required
-            autocomplete="new-password"
-            :placeholder="__('Password')"
-            viewable
-        />
+        {{-- Confirm Password --}}
+        <flux:input wire:model="form.password_confirmation" label="Confirmer le mot de passe" type="password"
+            name="password_confirmation" required autocomplete="new-password" />
 
-        <!-- Confirm Password -->
-        <flux:input
-            wire:model="password_confirmation"
-            :label="__('Confirm password')"
-            type="password"
-            required
-            autocomplete="new-password"
-            :placeholder="__('Confirm password')"
-            viewable
-        />
-
-        <div class="flex items-center justify-end">
-            <flux:button type="submit" variant="primary" class="w-full" data-test="register-user-button">
-                {{ __('Create account') }}
-            </flux:button>
-        </div>
+        <flux:button type="submit" variant="primary" class="w-full" spinner>
+            {{ __('S\'inscrire') }}
+        </flux:button>
     </form>
-
-    <div class="space-x-1 rtl:space-x-reverse text-center text-sm text-zinc-600 dark:text-zinc-400">
-        <span>{{ __('Already have an account?') }}</span>
-        <flux:link :href="route('login')" wire:navigate>{{ __('Log in') }}</flux:link>
-    </div>
-</div>
+</x-layouts.auth.card>

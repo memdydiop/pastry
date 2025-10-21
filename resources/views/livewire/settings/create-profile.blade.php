@@ -21,7 +21,9 @@ new #[Layout('components.layouts.auth')]
     public function saveProfile()
     {
         // Validation des données
-        $data = $this->form->validate();
+        $this->form->validate();
+
+        $data = $this->form->prepareForSave();
 
         try {
             DB::beginTransaction();
@@ -45,17 +47,6 @@ new #[Layout('components.layouts.auth')]
 
             // Redirection vers le tableau de bord
             return $this->redirect(route('dashboard'), navigate: true);
-
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            DB::rollBack();
-
-            // Supprimer l'avatar uploadé si la validation échoue
-            if (isset($avatarPath)) {
-                Storage::disk('public')->delete($avatarPath);
-            }
-
-            // Relancer l'exception pour afficher les erreurs
-            throw $e;
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -94,65 +85,59 @@ new #[Layout('components.layouts.auth')]
         </div>
     @endif
 
-    <form method="POST" wire:submit="saveProfile" class="flex flex-col gap-6">
+    <form method="POST" wire:submit="saveProfile" class="bg-body rounded-md p-6 border flex flex-col gap-6">
 
         <!-- Nom complet -->
-        <flux:input wire:model="form.full_name" :label="__('Nom et Prénoms')" name="full_name" type="text" required
-            autofocus placeholder="Nom Complet" />
-
-        <!-- Date de naissance -->
-        <flux:input wire:model="form.date_of_birth" :label="__('Date de naissance')" name="date_of_birth"
-            type="date" :max="date('Y-m-d')" placeholder="Date de naissance" />
-
-        <!-- Téléphone -->
-        <flux:input wire:model="form.phone" :label="__('Téléphone')" name="phone" type="tel" required
-            placeholder="+225 XX XX XX XX XX" />
-
-        <!-- Adresse -->
-        <flux:input wire:model="form.address" :label="__('Adresse')" name="address" type="text" required
-            placeholder="Adresse complète" />
-
-        <!-- Ville -->
-        <flux:input wire:model="form.city" :label="__('Ville')" name="city" type="text" required placeholder="Ville" />
-
-        <!-- Pays -->
-        <flux:input wire:model="form.country" :label="__('Pays')" name="country" type="text"
-            placeholder="Pays" />
-
-        <!-- Biographie -->
-        <flux:textarea wire:model="form.bio" :label="__('Biographie')" name="bio" rows="4"
-            placeholder="Parlez-nous de vous..." />
-
-        <!-- Avatar -->
+        <div>
+            <flux:input wire:model.blur="form.full_name" :label="__('Nom et Prénoms')" name="full_name" type="text"
+                required autofocus placeholder="Nom Complet" />
+            @error('form.full_name')
+                <span class="text-red-600 text-sm mt-1 block">{{ $message }}</span>
+            @enderror
+        </div><!-- Avatar -->
         <div>
             <label for="avatar" class="block text-sm font-medium text-gray-700 mb-2">
                 {{ __('Photo de profil') }}
             </label>
         
             {{-- Bloc d'aperçu de l'image --}}
-            @if ($form->avatar)
-                <div class="mb-4 flex items-center space-x-4">
-                    {{-- Affiche l'image en utilisant l'URL temporaire de Livewire --}}
-                    <img src="{{ $form->avatar->temporaryUrl() }}" alt="{{ __('Aperçu de l\'avatar') }}"
-                        class="w-20 h-20 rounded-full object-cover border border-gray-200 shadow-sm">
-                    {{-- Bouton pour retirer la sélection du fichier --}}
-                    <flux:button wire:click="$set('form.avatar', null)" type="button" variant="danger" size="sm">
-                        {{ __('Retirer') }}
-                    </flux:button>
-                </div>
-            @endif
+            <div class="mb-2 flex flex-col items-start space-x-4">
+                @if ($form->avatar)
+                    <div class="flex items-center justify-start space-x-4">
+                        <img src="{{ $form->avatar->temporaryUrl() }}" alt="{{ __('Aperçu de l\'avatar') }}"
+                            class="w-20 h-20 mask mask-squircle object-cover">
+                        <flux:button wire:click="$set('form.avatar', null)" type="button" variant="danger" size="sm">
+                            {{ __('Retirer') }}
+                        </flux:button>
+                    </div>
+                @else
+                    <div class="relative flex items-center justify-start gap-x-2">
+                        <div class="size-20 p-10 mask mask-squircle flex items-center justify-center">
+                            <flux:icon name="camera" class="w-10 h-10  text-white" />
+                        </div>
+                        <flux:button type="button" 
+                        class="bg-transparent! size-20! cursor-pointer border-none! absolute! inset!"
+                            onclick="document.getElementById('avatar').click()" aria-label="Changer l'avatar" />
+                        
+                            <flux:text sm color="muted" >
+                                {{ __("Clicker sur l'icon de la camera a gauche pour choisire une photo de profil") }}
+                            </flux:text>
+                        
+                            <input type="file" wire:model="form.avatar" name="avatar" id="avatar" class="hidden"
+                            accept="image/jpeg,image/jpg,image/png,image/webp" class="block w-full text-sm text-gray-500
+                                           file:mr-2 file:p-2 file:px-4
+                                           file:rounded file:border-2 file:border-info
+                                           file:text-sm file:font-semibold
+                                           file:bg-info/10 file:text-info
+                                           hover:file:bg-info/30" />
+                    </div>
+                @endif
+                <p class="mt-1 w-full text-center text-xs text-muted">
+                    JPG, PNG, WEBP. 2MB maximum. Minimum 100x100 pixels.
+                </p>
+            </div>
         
-            <input type="file" wire:model="form.avatar" name="avatar" id="avatar"
-                accept="image/jpeg,image/jpg,image/png,image/webp" {{-- Mise à jour des formats acceptés --}} class="block w-full text-sm text-gray-500 
-                               file:mr-4 file:py-2 file:px-4 
-                               file:rounded-full file:border-0 
-                               file:text-sm file:font-semibold 
-                               file:bg-blue-50 file:text-blue-700 
-                               hover:file:bg-blue-100" />
         
-            <p class="mt-1 text-xs text-gray-500">
-                JPG, PNG, WEBP. 2MB maximum.
-            </p>
         
             {{-- Indicateur de chargement Livewire --}}
             <div wire:loading wire:target="form.avatar" class="mt-2 text-sm text-blue-500">
@@ -160,14 +145,70 @@ new #[Layout('components.layouts.auth')]
             </div>
         
             @error('form.avatar')
-                <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span>
+                <span class="text-red-600 text-sm mt-1 block">{{ $message }}</span>
+            @enderror
+        </div>
+
+        <div class="flex items-center gap-x-6">
+            <!-- Date de naissance -->
+            <div class="flex-1">
+                <flux:input wire:model.blur="form.date_of_birth" :label="__('Date de naissance')" name="date_of_birth"
+                    type="date" :max="date('Y-m-d')" placeholder="Date de naissance" required />
+                @error('form.date_of_birth')
+                    <span class="text-red-600 text-sm mt-1 block">{{ $message }}</span>
+                @enderror
+            </div>
+            <!-- Téléphone -->
+            <div class="flex-1">
+                <flux:input wire:model.blur="form.phone" :label="__('Téléphone')" name="phone" type="tel" required
+                    placeholder="XX XX XX XX XX" />
+                @error('form.phone')
+                    <span class="text-red-600 text-sm mt-1 block">{{ $message }}</span>
+                @enderror
+            </div>
+        </div>
+
+        <!-- Adresse -->
+        <div>
+            <flux:input wire:model.blur="form.address" :label="__('Adresse')" name="address" type="text" required
+                placeholder="Adresse complète" />
+            @error('form.address')
+                <span class="text-red-600 text-sm mt-1 block">{{ $message }}</span>
+            @enderror
+        </div>
+
+        <div class="flex items-center gap-x-6">
+            <!-- Ville -->
+            <div class="flex-1">
+                <flux:input wire:model.blur="form.city" :label="__('Ville')" name="city" type="text" required
+                    placeholder="Ville" />
+                @error('form.city')
+                    <span class="text-red-600 text-sm mt-1 block">{{ $message }}</span>
+                @enderror
+            </div>
+            <!-- Pays -->
+            <div class="flex-1">
+                <flux:input wire:model.blur="form.country" :label="__('Pays')" name="country" type="text" required
+                    placeholder="Pays" />
+                @error('form.country')
+                    <span class="text-red-600 text-sm mt-1 block">{{ $message }}</span>
+                @enderror
+            </div>
+        </div>
+
+        <!-- Biographie -->
+        <div>
+            <flux:textarea wire:model.blur="form.bio" :label="__('Biographie')" name="bio" rows="4" required
+                placeholder="Parlez-nous de vous..." />
+            @error('form.bio')
+                <span class="text-red-600 text-sm mt-1 block">{{ $message }}</span>
             @enderror
         </div>
 
         <!-- Bouton de soumission -->
         <flux:button type="submit" variant="primary" wire:loading.attr="disabled" class="w-full">
-            <span wire:loading.remove>Créer mon profil</span>
-            <span wire:loading>Création en cours...</span>
+            <span wire:loading.remove wire:target="saveProfile">Créer mon profil</span>
+            <span wire:loading wire:target="saveProfile">Création en cours...</span>
         </flux:button>
 
     </form>

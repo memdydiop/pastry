@@ -163,6 +163,14 @@ select:focus[data-flux-control] {
 
 }
 
-/* \[:where(&)\]:size-4 {
+ui-disclosure[data-open] {
+    @apply text-sidebar-item-hover-color
+}
+
+ui-disclosure[data-open] button[data-open] {
+    @apply text-sidebar-item-hover-color
+}
+
+/* \[:where(&)\]:size-4 {#
     @apply size-4;
 } */

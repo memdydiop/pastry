@@ -3,6 +3,13 @@
 use Illuminate\Support\Facades\Route;
 use Laravel\Fortify\Features;
 use Livewire\Volt\Volt;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\TestMail;
+
+Route::get('/test-mail', function () {
+    Mail::to('test@example.com')->send(new TestMail());
+    return 'Email de test envoyé ! Vérifiez votre boîte Mailtrap.';
+});
 
 Route::get('/welcome', function () {
     return view('welcome');
@@ -44,6 +51,10 @@ Route::middleware(['auth', 'verified', 'profile.completed'])->group(function () 
         Volt::route('users', 'admin.users.index')
             ->name('users.index')
             ->can('view users');
+
+        // ✅ AJOUTEZ CETTE LIGNE POUR LES INVITATIONS
+        Volt::route('invitations', 'admin.users.invitations')
+        ->name('invitations.index');
         
         // Gestion des rôles et permissions
         Volt::route('roles', 'admin.roles.index')

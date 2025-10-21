@@ -12,30 +12,35 @@
 ])
     
 @php
-    // Button should be a square if it has no text contents...
-    $square ??= $slot->isEmpty();
+        // Button should be a square if it has no text contents...
+        $square ??= $slot->isEmpty();
 
-    // Size-up icons in square/icon-only buttons...
-    $iconClasses = Flux::classes($square ? 'size-6!' : 'size-5!');
+        // Size-up icons in square/icon-only buttons...
+        $iconClasses = Flux::classes($square ? 'size-6!' : 'size-5!');
 
-    $disclosureClasses = Flux::classes()
-        ->add('group/disclosure rounded')
-        ->add('data-open:bg-sidebar-item-active-bg/50')
-        ->add('data-current:bg-sidebar-item-active-bg data-current:text-sidebar-item-active-color')
-        ->add('text-sidebar-item-color/50')
+        $disclosureClasses = Flux::classes()
+            ->add('group/disclosure rounded')
+            ->add('data-open:bg-sidebar-item-active-bg/50')
+            ->add('data-current:bg-sidebar-item-active-bg data-current:text-sidebar-item-active-color')
+            ->add('text-sidebar-item-color/50')
+            ;
+
+        $classes = Flux::classes()
+            ->add('h-10 cursor-pointer flex items-center gap-3 rounded ')
+            ->add($square ? 'px-2.5!' : '')
+            ->add('py-0 px-3 my-0 text-start w-full')
+            ->add('data-open:rounded-b-none data-open:bg-sidebar-item-active-bg/50')
+            ->add('data-open:border-b border-slate-700/30')
+            ->add('data-current:text-sidebar-item-active-color')
+            ->add('data-current:bg-sidebar-item-active-bg data-current:border-b')
+            ->add('hover:text-sidebar-item-hover-color hover:bg-sidebar-item-active-bg/50')
+            ->add('text-sidebar-item-color/35')
         ;
-
-    $classes = Flux::classes()
-        ->add('h-10 cursor-pointer flex items-center gap-3 rounded ')
-        ->add($square ? 'px-2.5!' : '')
-        ->add('py-0 px-3 my-0 text-start w-full')
-        ->add('data-open:rounded-b-none data-open:bg-sidebar-item-active-bg/50')
-        ->add('data-open:border-b border-slate-700/30')
-        ->add('data-current:text-sidebar-item-active-color')
-        ->add('data-current:bg-sidebar-item-active-bg data-current:border-b')
-        ->add('hover:text-sidebar-item-hover-color hover:bg-sidebar-item-active-bg/50')
-        ->add('text-sidebar-item-color/35')
-    ;
+    $btnClasses = Flux::classes()
+        ->add('group/disclosure-button w-full h-8 flex items-center mb-0 px-3 bg-zinc-800/5 ')
+        ->add('hover:bg-zinc-800/10 hover:text-white')
+        ->add('group-data-open/disclosure:bg-zinc-800/15')
+        ->add('group-data-open/disclosure:text-white!');
 @endphp
 
 <?php if ($expandable && $heading): ?>

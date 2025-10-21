@@ -10,7 +10,7 @@ $invalid ??= ($name && $errors->has($name));
 
 $classes = Flux::classes()
     ->add('block p-3 w-full')
-    ->add('shadow-xs disabled:shadow-none border rounded-lg')
+    ->add('shadow-xs disabled:shadow-none border rounded')
     ->add('bg-white')
     ->add($resize ? 'resize-y' : 'resize-none')
     ->add('text-base sm:text-sm')

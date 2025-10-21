@@ -19,42 +19,52 @@
                     wire:navigate>
                     {{ __('Dashboard') }}
                 </flux:navlist.item>
-            @role('Ghost')
-                <flux:navlist.item icon="users" :href="route('admin.users.index')" :current="request()->routeIs('admin.users.*')"
-                    wire:navigate>
-                    {{ __('Gestion des Utilisateurs') }}
-                </flux:navlist.item>
-            @endrole
+
             </flux:navlist.group>
         </flux:navlist>
 
         <flux:spacer />
         <flux:navlist variant="outline">
-            @can('view roles')
-                <flux:navlist.item icon="shield-check" :href="route('admin.roles.index')" wire:navigate :current="request()->routeIs('admin.roles.*')">
-                    
-                    Rôles & Permissions
-                </flux:navlist.item>
-            @endcan
-            <flux:navlist.item icon="folder-git-2" href="https://github.com/laravel/livewire-starter-kit"
-                target="_blank">
-                {{ __('Repository') }}
-            </flux:navlist.item>
+            <flux:navlist.group :heading="__('Administration')">
+                
 
-            <flux:navlist.item icon="book-open-text" href="https://laravel.com/docs/starter-kits#livewire"
-                target="_blank">
-                {{ __('Documentation') }}
-            </flux:navlist.item>
+                
+
+                <flux:navlist.group icon="user-group" heading="Gestion des Utilisateurs" expandable>
+                    @can('view users')
+                        <flux:navlist.item icon="users" :href="route('admin.users.index')" :current="request()->routeIs('admin.users.index')"
+                            wire:navigate>
+                            {{ __('Utilisateurs') }}
+                        </flux:navlist.item>
+                    @endcan
+                    @can('create users')
+                        <flux:navlist.item icon="envelope" :href="route('admin.invitations.index')"
+                            :current="request()->routeIs('admin.invitations.index')" wire:navigate>
+                            {{ __('Invitations') }}
+                        </flux:navlist.item>
+                    @endcan
+                </flux:navlist.group>
+
+                @can('view roles')
+                    <flux:navlist.item icon="shield-check" :href="route('admin.roles.index')"
+                        :current="request()->routeIs('admin.roles.index')" wire:navigate>
+                        {{ __('Rôles & Permissions') }}
+                    </flux:navlist.item>
+                @endcan
+
+                </flux:sidebar.group>
         </flux:navlist>
+
+
+
 
         <!-- Desktop User Menu -->
         <flux:dropdown class="hidden lg:block" position="bottom" align="start">
-            <flux:profile :name="auth()->user()->name" 
-                :avatar="auth()->user()->avatar"
+            <flux:profile :name="auth()->user()->name" :avatar="auth()->user()->avatar"
                 :initials="auth()->user()->initials()" icon-trailing="chevrons-up-down"
                 data-test="sidebar-menu-button" />
 
-                
+
 
             <x-user-dropdown-menu />
         </flux:dropdown>
@@ -68,8 +78,7 @@
 
         <flux:dropdown position="top" align="end">
             <flux:profile class="bg-sidebar-bg! hover:bg-sidebar-bg! focus:bg-sidebar-bg!"
-                :avatar="auth()->user()->avatar" 
-                :initials="auth()->user()->initials()" :name="auth()->user()->name"
+                :avatar="auth()->user()->avatar" :initials="auth()->user()->initials()" :name="auth()->user()->name"
                 icon-trailing="chevron-down" />
 
             <x-user-dropdown-menu />

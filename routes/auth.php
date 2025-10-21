@@ -3,13 +3,19 @@
 use App\Http\Controllers\Auth\VerifyEmailController;
 use Illuminate\Support\Facades\Route;
 use Livewire\Volt\Volt;
+use App\Http\Middleware\ValidateInvitationToken; // Le middleware que nous allons créer
 
 Route::middleware('guest')->group(function () {
     Volt::route('login', 'auth.login')
         ->name('login');
 
-    Volt::route('register', 'auth.register')
-        ->name('register');
+    // NOUVELLE LIGNE (CORRECTE) - À AJOUTER
+    Volt::route('register/{token}', 'auth.register')
+    ->middleware(['guest', ValidateInvitationToken::class])
+    ->name('register.invitation');
+
+    //Volt::route('register', 'auth.register')
+        //->name('register');
 
     Volt::route('forgot-password', 'auth.forgot-password')
         ->name('password.request');
