@@ -17,9 +17,6 @@ class ProfileForm extends Form
     public ?string $bio = null;
     public $avatar = null;
 
-    /**
-     * ✅ AMÉLIORATION : Validation renforcée avec regex et dimensions
-     */
     public function rules(): array
     {
         $profileId = auth()->user()->profile?->id;
@@ -28,9 +25,9 @@ class ProfileForm extends Form
             'full_name' => [
                 'required',
                 'string',
-                'min:2',
+                'min:5',
                 'max:255',
-                'regex:/^[\p{L}\s\-\']+$/u', // Lettres, espaces, tirets, apostrophes
+                'regex:/^[\p{L}\s\-\']+$/u',
             ],
             'date_of_birth' => [
                 'required',
@@ -43,27 +40,24 @@ class ProfileForm extends Form
                 'string', 
                 'min:8',
                 'max:20',
-                //'regex:/^[\+]?[(]?[0-9]{1,4}[)]?[-\s\.]?[(]?[0-9]{1,4}[)]?[-\s\.]?[0-9]{1,9}$/',
-                'regex:/^\+?\(?\d{1,4}\)?[-\s\.]?\(?\d{1,4}\)?[-\s\.]?\d{1,9}$/',
+                // Regex simplifiée et plus permissive
+                'regex:/^[\+]?[0-9\s\-\(\)\.]+$/',
                 Rule::unique(UserProfile::class, 'phone')->ignore($profileId)
             ],
             'address' => ['required', 'string', 'min:5', 'max:255'],
             'city' => ['required', 'string', 'min:2', 'max:100'],
             'country' => ['required', 'string', 'min:2', 'max:100'],
-            'bio' => ['required', 'string', 'min:10', 'max:1000'],
+            'bio' => ['required', 'string', 'min:10', 'max:500'],
             'avatar' => [
                 'nullable',
                 'image',
-                'mimes:jpeg,jpg,png,webp', // ✅ Support WEBP
+                'mimes:jpeg,jpg,png,webp',
                 'max:2048',
                 'dimensions:min_width=100,min_height=100,max_width=4000,max_height=4000'
             ],
         ];
     }
 
-    /**
-     * ✅ AMÉLIORATION : Messages plus explicites
-     */
     public function messages(): array
     {
         return [
@@ -111,9 +105,6 @@ class ProfileForm extends Form
         ];
     }
 
-    /**
-     * ✅ NOUVEAU : Prépare les données avant enregistrement
-     */
     public function prepareForSave(): array
     {
         $data = $this->only([
@@ -126,12 +117,13 @@ class ProfileForm extends Form
             'bio',
         ]);
 
-        // Nettoyage
-        $data['phone'] = preg_replace('/[^\+0-9]/', '', $data['phone']);
+        // Nettoyage - garde les + et les chiffres
+        $data['phone'] = preg_replace('/[^+0-9]/', '', $data['phone']);
         $data['full_name'] = trim($data['full_name']);
         $data['address'] = trim($data['address']);
         $data['city'] = trim($data['city']);
         $data['country'] = trim($data['country']);
+        $data['bio'] = trim($data['bio']);
         
         return $data;
     }

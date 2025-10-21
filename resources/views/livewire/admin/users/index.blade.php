@@ -105,7 +105,10 @@ new #[Title('Gestion des utilisateurs')]
 };
 ?>
 
-<x-layouts.content :heading="__('Utilisateurs')" :subheading="__('Gestion des Utilisateur')" :pageHeading="__('Profil')"
+<x-layouts.content 
+    :heading="__('Administration')" 
+    :subheading="__('Gestion des Utilisateurs')" 
+    :pageHeading="__('Utilisateurs')"
     :pageSubheading="__('Mettez à jour les informations de votre profil et votre avatar.')">
 
     <x-slot name="actions" class="flex gap-x-2">

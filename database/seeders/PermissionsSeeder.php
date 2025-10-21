@@ -5,108 +5,95 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
+use Spatie\Permission\PermissionRegistrar;
 
 class PermissionsSeeder extends Seeder
 {
     /**
-     * Liste complète des permissions du système.
+     * Retourne la liste de toutes les permissions de l'application.
+     * C'est la "Source de Vérité". Pour ajouter une permission,
+     * il suffit de l'ajouter à ce tableau.
+     *
+     * @return array
      */
-    protected array $permissions = [
-        // Gestion des utilisateurs
-        'users' => [
+    public function getPermissions(): array
+    {
+        return [
+            // Gestion des Utilisateurs
             'view users',
             'create users',
             'edit users',
             'delete users',
             'export users',
-        ],
-        
-        // Gestion des rôles
-        'roles' => [
+
+            // Gestion des Rôles & Permissions
             'view roles',
             'create roles',
             'edit roles',
             'delete roles',
-        ],
-        
-        // Gestion des permissions
-        'permissions' => [
+
+            'view admin',
+
             'view permissions',
             'assign permissions',
-        ],
-        
-        // Gestion des profils
-        'profiles' => [
+
             'view all profiles',
             'edit all profiles',
             'delete profiles',
-        ],
-        
-        // Paramètres système
-        'settings' => [
+
             'view settings',
             'edit settings',
-        ],
-        
-        // Rapports
-        'reports' => [
+
             'view reports',
             'export reports',
-        ],
-    ];
 
-    public function run(): void
-    {
-        // Réinitialiser le cache des permissions
-        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
-
-        // Créer toutes les permissions
-        foreach ($this->permissions as $category => $perms) {
-            foreach ($perms as $permission) {
-                Permission::firstOrCreate(
-                    ['name' => $permission],
-                    ['guard_name' => 'web']
-                );
-            }
-        }
-
-        // Créer ou mettre à jour les rôles
-        $this->createRoles();
-
-        $this->command->info('✅ Permissions créées avec succès !');
+            // --- AJOUTEZ VOS NOUVELLES PERMISSIONS CI-DESSOUS ---
+            
+            // Exemple : Gestion des Rapports
+            // 'view reports',
+            // 'export reports',
+        ];
     }
 
     /**
-     * Crée les rôles et assigne les permissions.
+     * Exécute les seeds de la base de données.
      */
-    protected function createRoles(): void
+    public function run(): void
     {
-        // 1. Rôle Ghost (Super Admin)
-        $ghostRole = Role::firstOrCreate(['name' => 'Ghost']);
-        $ghostRole->syncPermissions(Permission::all());
+        // Réinitialise le cache des rôles et permissions
+        app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
-        // 2. Rôle Admin
-        $adminRole = Role::firstOrCreate(['name' => 'admin']);
+        // --- 1. Création des Permissions ---
+        $permissions = $this->getPermissions();
+        foreach ($permissions as $permission) {
+            Permission::firstOrCreate(['name' => $permission]);
+        }
+
+        // --- 2. Création des Rôles ---
+        $ghostRole = Role::firstOrCreate(['name' => 'Ghost']);
+        $adminRole = Role::firstOrCreate(['name' => 'Admin']);
+        $userRole = Role::firstOrCreate(['name' => 'User']);
+
+        // --- 3. Assignation des Permissions aux Rôles ---
+        // Le "Ghost" obtient toutes les permissions
+        //$ghostRole->givePermissionTo(Permission::all());
+
+        // Le "Admin" obtient toutes les permissions
         $adminRole->syncPermissions([
             'view users', 'create users', 'edit users', 'export users',
             'view roles', 'edit roles',
             'view all profiles', 'edit all profiles',
+            'view admin',
             'view settings',
             'view reports', 'export reports',
         ]);
 
-        // 3. Rôle Moderator
-        $moderatorRole = Role::firstOrCreate(['name' => 'moderator']);
-        $moderatorRole->syncPermissions([
+        // Le "User" obtient un ensemble de permissions de base
+        $userRole->syncPermissions([
             'view users', 'edit users',
             'view all profiles',
             'view reports',
+            // Ajoutez ici d'autres permissions par défaut pour un utilisateur standard
         ]);
-
-        // 4. Rôle User (par défaut)
-        $userRole = Role::firstOrCreate(['name' => 'user']);
-        // Les utilisateurs normaux n'ont que les permissions de base
-
-        $this->command->info('✅ Rôles configurés avec succès !');
     }
 }

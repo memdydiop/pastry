@@ -161,8 +161,8 @@ new #[Title('Gestion des rôles')]
                                         <div class="flex flex-col">
                                             <div class="font-medium text-gray-900">
                                                 {{ $role->name }}
-                                                @if(in_array($role->name, ['Ghost', 'admin']))
-                                                    <flux:badge size="sm" color="blue" class="ml-2">Système</flux:badge>
+                                                @if(in_array($role->name, ['Ghost', 'Admin']))
+                                                    <flux:badge size="sm" color="info" class="ml-2">Système</flux:badge>
                                                 @endif
                                             </div>
                                         </div>

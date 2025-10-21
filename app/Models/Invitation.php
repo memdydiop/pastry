@@ -14,4 +14,17 @@ class Invitation extends Model
         'token',
         'registered_at',
     ];
+    
+    /**
+    * The attributes that should be cast.
+    *
+    * @var array
+    */
+    protected function casts(): array
+    {
+        return [
+        'registered_at' => 'datetime',
+        ];
+    }
+
 }

@@ -75,8 +75,12 @@ new #[Title('Gestion des invitations')]
 };
 ?>
 
-<x-layouts.content heading="Invitations"
-    subheading="Suivez et gérez les invitations envoyées aux nouveaux utilisateurs.">
+<x-layouts.content :heading="__('Administration')"
+    :subheading="__('Gestion des Utilisateurs.')" 
+    :pageHeading="__('Invitations')"
+    :pageSubheading="__('Suivez et gérez les invitations envoyées aux nouveaux utilisateurs.')">
+
+    
 
     {{-- Messages Flash --}}
     @if (session()->has('success') || session()->has('error'))

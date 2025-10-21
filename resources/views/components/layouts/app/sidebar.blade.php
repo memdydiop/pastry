@@ -25,10 +25,8 @@
 
         <flux:spacer />
         <flux:navlist variant="outline">
+            @can('view admin')
             <flux:navlist.group :heading="__('Administration')">
-                
-
-                
 
                 <flux:navlist.group icon="user-group" heading="Gestion des Utilisateurs" expandable>
                     @can('view users')
@@ -53,6 +51,7 @@
                 @endcan
 
                 </flux:sidebar.group>
+        @endcan
         </flux:navlist>
 
 
