@@ -2,63 +2,46 @@
 
 namespace App\Livewire\Forms\Auth;
 
+use App\Models\Invitation;
 use App\Models\User;
 use Illuminate\Auth\Events\Registered;
-use Illuminate\Validation\Rules;
+use Illuminate\Support\Facades\Hash;
+use Livewire\Attributes\Validate;
 use Livewire\Form;
+use Spatie\Permission\Models\Role;
 
 class RegisterForm extends Form
 {
-    
+    #[Validate('required|string|email|max:255|unique:'.User::class)]
+    public string $email = '';
+
+    #[Validate('required|string|min:8|confirmed')]
+    public string $password = '';
+
+    #[Validate('required|string|min:8')]
+    public string $password_confirmation = '';
 
     /**
-     * The user's email address.
-     *
-     * @var string
+     * Crée un nouvel utilisateur à partir des données du formulaire.
      */
-    public $email = '';
-
-    /**
-     * The user's password.
-     *
-     * @var string
-     */
-    public $password = '';
-
-    /**
-     * The user's password confirmation.
-     *
-     * @var string
-     */
-    public $password_confirmation = '';
-
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\Rule|array|string>
-     */
-    public function rules(): array
-    {
-        return [
-            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
-            'password' => ['required', 'string', 'confirmed', Rules\Password::defaults()],
-        ];
-    }
-
-    /**
-     * Create a new user instance and authenticate them.
-     */
-    public function store(): User
+    public function store(?Invitation $invitation = null): void
     {
         $this->validate();
 
         $user = User::create([
             'email' => $this->email,
-            'password' => bcrypt($this->password),
+            'password' => Hash::make($this->password),
         ]);
 
+        if ($invitation) {
+            $role = Role::findById($invitation->role_id);
+            if ($role) {
+                $user->assignRole($role);
+            }
+        }
+
         event(new Registered($user));
-        
-        return $user;
+
+        auth()->login($user);
     }
 }

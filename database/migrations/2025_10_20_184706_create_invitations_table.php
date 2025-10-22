@@ -6,20 +6,26 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
+    /**
+     * Run the migrations.
+     */
     public function up(): void
     {
         Schema::create('invitations', function (Blueprint $table) {
             $table->id();
-            $table->string('email')->unique(); // L'email de la personne invitée
-            $table->uuid('token')->unique(); // Un jeton unique et non devinable
-            $table->timestamp('registered_at')->nullable(); // Marque l'invitation comme utilisée
-            $table->timestamps(); // created_at & updated_at
+            $table->string('email')->unique();
+            $table->string('token', 36)->unique();
+            $table->foreignId('role_id')->constrained()->cascadeOnDelete(); // Ajout de la colonne role_id
+            $table->timestamp('registered_at')->nullable();
+            $table->timestamps();
         });
     }
 
+    /**
+     * Reverse the migrations.
+     */
     public function down(): void
     {
         Schema::dropIfExists('invitations');
     }
-
 };

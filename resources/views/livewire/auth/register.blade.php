@@ -10,51 +10,30 @@ new #[Layout('components.layouts.auth')] class extends Component {
     public ?Invitation $invitation = null;
 
     /**
-     * Mount the component and pre-fill the form.
+     * Initialise le composant et pré-remplit le formulaire.
      */
     public function mount(string $token = ''): void
     {
-        // firstOrFail() va automatiquement générer une erreur 404 si le token
-        // est invalide ou si l'invitation a déjà été utilisée. C'est plus propre.
         $this->invitation = Invitation::where('token', $token)->whereNull('registered_at')->firstOrFail();
-
-        // On assigne l'email de l'invitation au champ du formulaire.
-        // L'erreur précédente se produisait ici, mais avec une gestion propre via firstOrFail,
-        // ce code n'est atteint que si $this->invitation est valide.
         $this->form->email = $this->invitation->email;
     }
 
     /**
-     * Handle the registration request.
+     * Gère la demande d'enregistrement.
      */
     public function register(): void
     {
-        // Pour une sécurité maximale, on revérifie que l'email du formulaire
-        // correspond bien à une invitation encore valide au moment de la soumission.
-        // Cela évite des manipulations entre le chargement de la page et l'envoi du formulaire.
-        $invitation = Invitation::where('email', $this->form->email)->whereNull('registered_at')->first();
-
-        if (!$invitation) {
-            // Redirige avec une erreur si l'invitation n'est plus valide.
-            session()->flash('error', 'Ce lien d\'invitation a expiré ou a déjà été utilisé.');
-            $this->redirect(route('login'), navigate: true);
-            return;
-        }
-
-        // Valide et crée l'utilisateur via l'objet Form
-        $user = $this->form->store();
+        // Valide et crée l'utilisateur via l'objet Form, en passant l'invitation
+        $this->form->store($this->invitation);
 
         // Marque l'invitation comme utilisée
-        $invitation->update(['registered_at' => now()]);
+        $this->invitation->update(['registered_at' => now()]);
 
-        // Connecte l'utilisateur
-        auth()->login($user);
-
-        // Redirige vers le tableau de bord
-        $this->redirect(
-            url: route('dashboard', absolute: false),
-            navigate: true
-        );
+        // Redirige vers la page de vérification d'email
+        //$this->redirect(
+        //    url: route('verification.notice', absolute: false),
+        //    navigate: true
+        //);
     }
 }; ?>
 
@@ -67,7 +46,7 @@ new #[Layout('components.layouts.auth')] class extends Component {
 
         {{-- Email Address --}}
         <flux:input wire:model="form.email" label="Adresse Email" type="email" name="email" required readonly
-            autocomplete="username" />
+            disabled autocomplete="username" />
 
         {{-- Password --}}
         <flux:input wire:model="form.password" label="Mot de passe" type="password" name="password" required

@@ -18,33 +18,31 @@ class RoleService
 
     /**
      * Récupère tous les rôles avec leurs permissions.
+     * ✅ OPTIMISÉ : Sans cache pour déboguer
      */
     public function getAllRoles(): \Illuminate\Database\Eloquent\Collection
     {
-        return Cache::remember('roles:all', 3600, function () {
-            return Role::with('permissions')
-                ->withCount('users')
-                ->orderBy('name')
-                ->get();
-        });
+        return Role::with('permissions')
+            ->withCount('users')
+            ->orderBy('name')
+            ->get();
     }
 
     /**
      * Récupère toutes les permissions groupées par catégorie.
+     * ✅ OPTIMISÉ : Sans cache pour déboguer
      */
     public function getGroupedPermissions(): array
     {
-        return Cache::remember('permissions:grouped', 3600, function () {
-            $permissions = Permission::all();
-            
-            $grouped = [];
-            foreach ($permissions as $permission) {
-                $category = $this->extractCategory($permission->name);
-                $grouped[$category][] = $permission;
-            }
-            
-            return $grouped;
-        });
+        $permissions = Permission::all();
+        
+        $grouped = [];
+        foreach ($permissions as $permission) {
+            $category = $this->extractCategory($permission->name);
+            $grouped[$category][] = $permission;
+        }
+        
+        return $grouped;
     }
 
     /**

@@ -60,6 +60,12 @@ Route::middleware(['auth', 'verified', 'profile.completed'])->group(function () 
         Volt::route('roles', 'admin.roles.index')
             ->name('roles.index')
             ->can('view roles');
+
+            
+    });
+
+    Route::get('/test-roles', function () {
+        dd(\Spatie\Permission\Models\Role::withCount(['users', 'permissions'])->get());
     });
 
 });

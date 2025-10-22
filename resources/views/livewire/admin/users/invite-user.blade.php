@@ -7,12 +7,24 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\URL;
 use App\Mail\UserInvitationMail;
 use Livewire\Attributes\Validate;
+use Spatie\Permission\Models\Role;
+use Illuminate\Database\Eloquent\Collection;
 
 new class extends Component {
     #[Validate('required|email|unique:users,email')]
     public string $email = '';
 
+    #[Validate('required|exists:roles,id')]
+    public ?int $role_id = null;
+
+    public Collection $roles;
+
     public bool $modalOpen = false;
+
+    public function mount(): void
+    {
+        $this->roles = Role::all();
+    }
 
     public function sendInvitation(): void
     {
@@ -25,6 +37,7 @@ new class extends Component {
         $invitation = Invitation::create([
             'email' => $this->email,
             'token' => (string) Str::uuid(),
+            'role_id' => $this->role_id,
         ]);
 
         $signedUrl = URL::temporarySignedRoute(
@@ -41,7 +54,7 @@ new class extends Component {
 
     public function openModal()
     {
-        $this->reset('email');
+        $this->reset('email', 'role_id');
         $this->modalOpen = true;
     }
 
@@ -65,6 +78,14 @@ new class extends Component {
 
                 <flux:input wire:model="email" label="Adresse email" type="email" placeholder="nom@exemple.com" required />
                 @error('email') <flux:error>{{ $message }}</flux:error> @enderror
+
+                <flux:select wire:model="role_id" label="Rôle" required>
+                    <option value="">Sélectionner un rôle</option>
+                    @foreach($roles as $role)
+                        <option value="{{ $role->id }}">{{ $role->name }}</option>
+                    @endforeach
+                </flux:select>
+                @error('role_id') <flux:error>{{ $message }}</flux:error> @enderror
 
                 <div class="flex justify-end gap-2 pt-4 border-t">
                     <flux:button type="button" variant="secondary" wire:click="closeModal">

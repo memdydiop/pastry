@@ -34,6 +34,9 @@ class User extends Authenticatable
         'is_admin',
     ];
 
+    // ✅ Eager load automatique du profil
+    protected $with = ['profile'];
+
     protected function casts(): array
     {
         return [
