@@ -143,7 +143,7 @@ new class extends Component {
                             <div class="grid grid-cols-2 gap-2 ml-7">
                                 @foreach ($permissions as $permission)
                                     <flux:checkbox wire:model="selectedPermissions" value="{{ $permission->name }}"
-                                        label="{{ ucfirst(str_replace('_', ' ', $permission->name)) }}" />
+                                        label="{{ str_replace('_', ' ', $permission->name) }}" />
                                 @endforeach
                             </div>
                         </div>

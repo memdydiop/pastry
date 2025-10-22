@@ -25,7 +25,7 @@
 
         <flux:spacer />
         <flux:navlist variant="outline">
-            @can('view admin')
+            @can('view administration')
             <flux:navlist.group :heading="__('Administration')">
 
                 <flux:navlist.group icon="user-group" heading="Gestion des Utilisateurs" expandable>
@@ -53,18 +53,12 @@
                 </flux:sidebar.group>
         @endcan
         </flux:navlist>
-
-
-
-
+        
         <!-- Desktop User Menu -->
         <flux:dropdown class="hidden lg:block" position="bottom" align="start">
             <flux:profile :name="auth()->user()->name" :avatar="auth()->user()->avatar"
                 :initials="auth()->user()->initials()" icon-trailing="chevrons-up-down"
                 data-test="sidebar-menu-button" />
-
-
-
             <x-user-dropdown-menu />
         </flux:dropdown>
     </flux:sidebar>

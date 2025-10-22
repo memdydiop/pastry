@@ -40,7 +40,6 @@ new #[Title('Gestion des utilisateurs')]
 
     public function mount(): void
     {
-
         // Vérifie la permission d'accès à la page
         Gate::authorize('view users'); // ⬅️ Utilisation de Gate::authorize
 
@@ -107,15 +106,15 @@ new #[Title('Gestion des utilisateurs')]
 
 <x-layouts.content 
     :heading="__('Administration')" 
-    :subheading="__('Gestion des Utilisateurs')" 
-    :pageHeading="__('Utilisateurs')"
+    :subheading="__('Gestion des Utilisateurs')"
+    :pageHeading="__('Utilisateurs')" 
     :pageSubheading="__('Mettez à jour les informations de votre profil et votre avatar.')">
 
     <x-slot name="actions" class="flex gap-x-2">
         @can('create users')
             <livewire:admin.users.invite-user />
         @endcan
-        </x-slot>
+    </x-slot>
 
     {{-- Affichage des messages flash pour la suppression --}}
     @if (session()->has('success') || session()->has('error'))
@@ -216,7 +215,8 @@ new #[Title('Gestion des utilisateurs')]
                                             <flux:heading class="">
                                                 {{ $user->name }}
                                                 @if ($user->is(auth()->user()))
-                                                    <flux:badge size="sm" color="blue" class=" rounded-full! p-0! size-2 bg-success  ">
+                                                    <flux:badge size="sm" color="blue"
+                                                        class=" rounded-full! p-0! size-2 bg-success  ">
 
                                                     </flux:badge>
                                                 @endif
@@ -231,7 +231,8 @@ new #[Title('Gestion des utilisateurs')]
                                 <td class="whitespace-nowrap px-3 py-2 text-sm text-gray-500 ">
                                     @forelse ($user->roles as $role)
                                         <flux:badge color="primary" class="mr-1 max-sm:block max-sm:mb-1">
-                                            {{ ucfirst($role->name) }}</flux:badge>
+                                            {{ ucfirst($role->name) }}
+                                        </flux:badge>
                                     @empty
                                         <flux:badge color="secondary">Aucun</flux:badge>
                                     @endforelse
@@ -270,40 +271,35 @@ new #[Title('Gestion des utilisateurs')]
 
                                 {{-- COLONNE ACTIONS CORRIGÉE --}}
                                 <td class="whitespace-nowrap py-4 pl-3 pr-4 text-sm text-right sm:pr-6">
-                                        <flux:dropdown position="bottom" align="end">
+                                    <flux:dropdown position="bottom" align="end">
 
-                                            <flux:button icon="ellipsis-vertical" size="sm" variant="ghost" title="Actions" inset />
+                                        <flux:button icon="ellipsis-vertical" size="sm" variant="ghost" title="Actions"
+                                            inset />
 
 
-                                            <flux:menu class="min-w-32!">
-                                                <div class="space-y-1">
-                                                    {{-- Ouvre la modale EditRoles --}}
-                                                    @can('edit users')
-                                                        <flux:button
-                                                            class="w-full"
-                                                            icon="pencil-square"
-                                                            variant="info"
-                                                            wire:click="$dispatch('edit-user-roles', { userId: {{ $user->id }} })">
-                                                            Rôles
-                                                        </flux:button>
-                                                    @endcan
-                                                </div>
-
-                                                {{-- Option Supprimer --}}
-                                                @if ($user->id !== auth()->id() && Gate::allows('delete users'))
-                                                    <flux:menu.separator />
-                                                    <flux:button 
-                                                        class="w-full"
-                                                        icon="trash" 
-                                                        wire:click="deleteUser({{ $user->id }})"
-                                                        variant="danger"
-                                                        confirm="Êtes-vous sûr de vouloir supprimer cet utilisateur ? Cette action est irréversible.">
-                                                        Supprimer
+                                        <flux:menu class="min-w-32!">
+                                            <div class="space-y-1">
+                                                {{-- Ouvre la modale EditRoles --}}
+                                                @can('edit users')
+                                                    <flux:button class="w-full" icon="pencil-square" variant="info"
+                                                        wire:click="$dispatch('edit-user-roles', { userId: {{ $user->id }} })">
+                                                        Rôles
                                                     </flux:button>
-                                                    
-                                                @endif
-                                            </flux:menu>
-                                        </flux:dropdown>
+                                                @endcan
+                                            </div>
+
+                                            {{-- Option Supprimer --}}
+                                            @if ($user->id !== auth()->id() && Gate::allows('delete users'))
+                                                <flux:menu.separator />
+                                                <flux:button class="w-full" icon="trash"
+                                                    wire:click="deleteUser({{ $user->id }})" variant="danger"
+                                                    confirm="Êtes-vous sûr de vouloir supprimer cet utilisateur ? Cette action est irréversible.">
+                                                    Supprimer
+                                                </flux:button>
+
+                                            @endif
+                                        </flux:menu>
+                                    </flux:dropdown>
                                 </td>
                             </tr>
                         @empty

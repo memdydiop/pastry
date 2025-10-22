@@ -32,7 +32,7 @@ class PermissionsSeeder extends Seeder
             'edit roles',
             'delete roles',
 
-            'view admin',
+            'view administration',
 
             'view permissions',
             'assign permissions',
@@ -83,7 +83,7 @@ class PermissionsSeeder extends Seeder
             'view users', 'create users', 'edit users', 'export users',
             'view roles', 'edit roles',
             'view all profiles', 'edit all profiles',
-            'view admin',
+            'view administration',
             'view settings',
             'view reports', 'export reports',
         ]);

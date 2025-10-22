@@ -9,12 +9,15 @@ use Livewire\Attributes\Title;
 
 new #[Title('Tableau de bord')]
     class extends Component {
-
+    public string $full_name = '';
+    public string $email = '';
     public array $stats = [];
     public array $rolesDistribution = [];
 
     public function mount(): void
     {
+        $this->full_name = Auth::user()->profile->full_name;
+        $this->email = Auth::user()->email;
         $this->loadStats();
         $this->loadRolesDistribution();
     }
@@ -63,12 +66,16 @@ new #[Title('Tableau de bord')]
 
 ?>
 
-<x-layouts.content :heading="__('Tableau de bord')" :subheading="__('Vue d\'ensemble de votre application')">
+<x-layouts.content 
+    :heading="__('Tableau de bord')" 
+    :subheading="__('Vue d\'ensemble de votre application')"
+    :pageHeading="__('Good Morning, ' . $full_name) . '👋'" 
+    :pageSubheading="__('Ready to explore your dashboard?')">
 
-    <div class="space-y-6">
+    <div class="space-y-4">
 
         {{-- Statistiques Principales --}}
-        <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
 
             {{-- Total Utilisateurs --}}
             <x-card>
@@ -132,7 +139,7 @@ new #[Title('Tableau de bord')]
         </div>
 
         {{-- Répartition des Rôles --}}
-        <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
 
             {{-- Widget Rôles --}}
             <x-card>

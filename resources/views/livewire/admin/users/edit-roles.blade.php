@@ -77,9 +77,9 @@ new class extends Component {
                     <flux:checkbox.group wire:model="userRoles">
                         @foreach ($allRoles as $role)
                             @if ($user->id === auth()->id() && $role === 'Ghost')
-                                <flux:checkbox label="{{ ucfirst($role) }} (Rôle système personnel)" value="{{ $role }}" disabled checked />
+                                <flux:checkbox label="{{ $role }} (Rôle système personnel)" value="{{ $role }}" disabled checked />
                             @else
-                                <flux:checkbox label="{{ ucfirst($role) }}" value="{{ $role }}" />
+                                <flux:checkbox label="{{ $role }}" value="{{ $role }}" />
                             @endif
                         @endforeach
                     </flux:checkbox.group>

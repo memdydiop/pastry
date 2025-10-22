@@ -19,7 +19,7 @@ new class extends Component {
         $this->groupedPermissions = $this->role->permissions
             ->groupBy(function ($permission) {
                 $parts = explode(' ', $permission->name);
-                return ucfirst(end($parts));
+                return end($parts);
             })
             ->map(function ($group) {
                 return $group->map(function ($permission) {
@@ -92,7 +92,7 @@ new class extends Component {
                                         <div class="flex items-center gap-2 p-2 bg-gray-50 rounded">
                                             <flux:icon.check-circle class="w-4 h-4 text-green-500 flex-shrink-0" />
                                             <flux:text sm class="truncate">
-                                                {{ ucfirst(str_replace('_', ' ', $permission['name'])) }}
+                                                {{ str_replace('_', ' ', $permission['name']) }}
                                             </flux:text>
                                         </div>
                                     @endforeach

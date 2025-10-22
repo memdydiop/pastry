@@ -81,7 +81,11 @@ new #[Title('Gestion des rôles')]
 
 ?>
 
-<x-layouts.content :heading="__('Rôles & Permissions')" :subheading="__('Gérez les rôles et leurs permissions')">
+<x-layouts.content 
+    :heading="__('Administration')" 
+    :subheading="__('Gestion des Utilisateurs')" 
+    :pageHeading="__('Rôles & Permissions')" 
+    :pageSubheading="__('Gérez les rôles et leurs permissions')">
 
     <x-slot name="actions">
         @can('create roles')
@@ -209,33 +213,43 @@ new #[Title('Gestion des rôles')]
 
                                 {{-- Colonne Actions --}}
                                 <td class="whitespace-nowrap py-2 px-3 text-right text-sm">
-                                    <div class="flex justify-end gap-2">
-                                        @can('view roles')
-                                            <button type="button"
-                                                wire:click="$dispatch('view-role-permissions', { roleId: {{ $role->id }} })"
-                                                class="text-blue-600 hover:text-blue-900 font-medium">
-                                                Voir
-                                            </button>
-                                        @endcan
 
-                                        @can('edit roles')
-                                            <button type="button"
-                                                wire:click="$dispatch('edit-role', { roleId: {{ $role->id }} })"
-                                                class="text-indigo-600 hover:text-indigo-900 font-medium">
-                                                Modifier
-                                            </button>
-                                        @endcan
+                                    <flux:dropdown position="bottom" align="end">
 
-                                        @can('delete roles')
-                                            @if(!$isProtected)
-                                                <button type="button" wire:click="deleteRole({{ $role->id }})"
-                                                    wire:confirm="Êtes-vous sûr de vouloir supprimer ce rôle ?"
-                                                    class="text-red-600 hover:text-red-900 font-medium">
-                                                    Supprimer
-                                                </button>
-                                            @endif
-                                        @endcan
-                                    </div>
+                                        <flux:button icon="ellipsis-vertical" size="sm" variant="ghost" title="Actions"
+                                            inset />
+
+                                        <flux:menu class="min-w-32!">
+                                            <div class="flex flex-col items-center space-y-1">
+                                                {{-- Ouvre la modale ViewRolePermissions --}}
+                                                @can('edit users')
+                                                    <flux:button class="w-full" icon="eye" variant="info"
+                                                        wire:click="$dispatch('view-role-permissions', { roleId: {{ $role->id }} })">
+                                                        Permissions
+                                                    </flux:button>
+                                                @endcan{{-- Ouvre la modale EditRole --}}
+                                                @can('edit roles')
+                                                    <flux:button class="w-full" icon="pencil-square" variant="info"
+                                                        wire:click="$dispatch('edit-role', { roleId: {{ $role->id }} })">
+                                                        Modifier
+                                                    </flux:button>
+                                                @endcan
+                                            </div>
+
+                                            {{-- Option Supprimer --}}
+                                            @can('delete roles')
+                                                @if(!$isProtected)
+                                                    <flux:menu.separator />
+                                                    <flux:button class="w-full" icon="trash"
+                                                        wire:click="deleteRole({{ $role->id }})" variant="danger"
+                                                        confirm="Êtes-vous sûr de vouloir supprimer ce rôle ? Cette action est irréversible.">
+                                                        Supprimer
+                                                    </flux:button>
+
+                                                @endif
+                                            @endcan
+                                        </flux:menu>
+                                    </flux:dropdown>
                                 </td>
                             </tr>
                         @empty

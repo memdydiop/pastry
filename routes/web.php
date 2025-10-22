@@ -45,7 +45,7 @@ Route::middleware(['auth', 'verified', 'profile.completed'])->group(function () 
     });
     
     // Admin Routes
-    Route::prefix('admin')->as('admin.')->middleware('role:Ghost|admin')->group(function () {
+    Route::prefix('admin')->as('admin.')->middleware('role:Ghost|Admin')->group(function () {
         
         // Gestion des utilisateurs
         Volt::route('users', 'admin.users.index')
