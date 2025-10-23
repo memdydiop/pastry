@@ -21,6 +21,9 @@ new #[Title('Gestion des rôles')]
     #[Url]
     public int $perPage = 10;
 
+    public string $sortField = 'name';
+    public string $sortDirection = 'asc';
+
     #[On('role-updated')]
     #[On('role-created')]
     #[On('role-deleted')]
@@ -38,6 +41,16 @@ new #[Title('Gestion des rôles')]
     {
         if (in_array($property, ['search', 'perPage'])) {
             $this->resetPage();
+        }
+    }
+
+    public function sortBy(string $field): void
+    {
+        if ($this->sortField === $field) {
+            $this->sortDirection = $this->sortDirection === 'asc' ? 'desc' : 'asc';
+        } else {
+            $this->sortField = $field;
+            $this->sortDirection = 'asc';
         }
     }
 
@@ -70,6 +83,7 @@ new #[Title('Gestion des rôles')]
             ->when($this->search, function (Builder $query, $search) {
                 $query->where('name', 'like', "%{$search}%");
             })
+            ->orderBy($this->sortField, $this->sortDirection)
             ->paginate($this->perPage);
 
         return [
@@ -81,11 +95,7 @@ new #[Title('Gestion des rôles')]
 
 ?>
 
-<x-layouts.content 
-    :heading="__('Administration')" 
-    :subheading="__('Gestion des Utilisateurs')" 
-    :pageHeading="__('Rôles & Permissions')" 
-    :pageSubheading="__('Gérez les rôles et leurs permissions')">
+<x-layouts.content :heading="__('Administration')" :subheading="__('Gestion des Utilisateurs')" :pageHeading="__('Rôles & Permissions')" :pageSubheading="__('Gérez les rôles et leurs permissions')">
 
     <x-slot name="actions">
         @can('create roles')
@@ -131,19 +141,46 @@ new #[Title('Gestion des rôles')]
                 <table class="min-w-full divide-y divide-gray-300">
                     <thead class="bg-gray-50">
                         <tr>
-                            <th class="py-2.5 px-3 text-left text-sm font-semibold text-gray-900">
-                                Rôle
+                            <th scope="col" class="py-2.5 px-3 text-left text-sm font-semibold text-gray-500">
+                                <button wire:click="sortBy('name')" class="flex items-center gap-1.5 group">
+                                    <span>Rôle</span>
+                                    @if ($sortField === 'name')
+                                        <flux:icon.chevron-up
+                                            class="w-3 h-3 transition-transform {{ $sortDirection === 'asc' ? 'rotate-180' : '' }}" />
+                                    @else
+                                        <flux:icon.chevrons-up-down
+                                            class="w-3 h-3 text-gray-400 transition-opacity group-hover:opacity-100 opacity-0" />
+                                    @endif
+                                </button>
                             </th>
-                            <th class="py-2.5 px-3 text-left text-sm font-semibold text-gray-900">
-                                Utilisateurs
+                            <th scope="col" class="py-2.5 px-3 text-left text-sm font-semibold text-gray-500">
+                                <button wire:click="sortBy('users_count')" class="flex items-center gap-1.5 group">
+                                    <span>Utilisateurs</span>
+                                    @if ($sortField === 'users_count')
+                                        <flux:icon.chevron-up
+                                            class="w-3 h-3 transition-transform {{ $sortDirection === 'asc' ? 'rotate-180' : '' }}" />
+                                    @else
+                                        <flux:icon.chevrons-up-down
+                                            class="w-3 h-3 text-gray-400 transition-opacity group-hover:opacity-100 opacity-0" />
+                                    @endif
+                                </button>
                             </th>
-                            <th class="py-2.5 px-3 text-left text-sm font-semibold text-gray-900">
-                                Permissions
+                            <th scope="col" class="py-2.5 px-3 text-left text-sm font-semibold text-gray-500">
+                                <button wire:click="sortBy('permissions_count')"
+                                    class="flex items-center gap-1.5 group">
+                                    <span>Permissions</span>
+                                    @if ($sortField === 'permissions_count')
+                                        <flux:icon.chevron-up
+                                            class="w-3 h-3 transition-transform {{ $sortDirection === 'asc' ? 'rotate-180' : '' }}" />
+                                    @else
+                                        <flux:icon.chevrons-up-down
+                                            class="w-3 h-3 text-gray-400 transition-opacity group-hover:opacity-100 opacity-0" />
+                                    @endif
+                                </button>
                             </th>
-                            <th class="py-2.5 px-3 text-center text-sm font-semibold text-gray-900">
-                                Statut
+                            <th scope="col" class="py-2.5 px-3 text-center text-sm font-semibold text-gray-500">Statut
                             </th>
-                            <th class="py-2.5 px-3 text-right text-sm font-semibold text-gray-900">
+                            <th scope="col" class="relative py-2.5 pl-3 pr-4 sm:pr-6">
                                 <span class="sr-only">Actions</span>
                             </th>
                         </tr>
@@ -152,40 +189,26 @@ new #[Title('Gestion des rôles')]
                         @forelse ($roles as $role)
                             @php
                                 $isProtected = in_array($role->name, $protectedRoles);
-                                $bgColor = $role->name === 'Ghost' ? 'bg-purple-100 text-purple-600' :
-                                    ($role->name === 'admin' ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-600');
                             @endphp
 
-                            <tr wire:key="role-{{ $role->id }}" class="hover:bg-gray-50">
-                                {{-- Colonne Rôle --}}
-                                <td class="whitespace-nowrap py-2 px-3 text-sm">
-                                    <div class="flex items-center gap-3">
-                                        <div
-                                            class="flex-shrink-0 h-10 w-10 flex items-center justify-center rounded-full {{ $bgColor }}">
-                                            <flux:icon.shield-check class="w-5 h-5" />
-                                        </div>
-                                        <div>
-                                            <span class="font-medium text-gray-900">{{ $role->name }}</span>
-                                            @if($isProtected)
-                                                <span
-                                                    class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
-                                                    Système
-                                                </span>
-                                            @endif
-                                        </div>
+                            <tr wire:key="role-{{ $role->id }}">
+                                <td class="whitespace-nowrap py-2 p-3 text-sm">
+                                    <div class="flex items-center">
+                                        <div class="font-medium text-gray-900">{{ $role->name }}</div>
+                                        @if($isProtected)
+                                            <span
+                                                class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                                                Système
+                                            </span>
+                                        @endif
                                     </div>
                                 </td>
 
-                                {{-- Colonne Utilisateurs --}}
                                 <td class="whitespace-nowrap px-3 py-2 text-sm text-gray-500">
-                                    <div class="flex items-center gap-2">
-                                        <flux:icon.users class="w-4 h-4" />
-                                        <span class="font-medium">{{ $role->users_count }}</span>
-                                    </div>
+                                    {{ $role->users_count }}
                                 </td>
 
-                                {{-- Colonne Permissions --}}
-                                <td class="px-3 py-2 text-sm text-gray-500">
+                                <td class="whitespace-nowrap px-3 py-2 text-sm text-gray-500">
                                     @if($role->permissions_count > 0)
                                         <span
                                             class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
@@ -196,7 +219,6 @@ new #[Title('Gestion des rôles')]
                                     @endif
                                 </td>
 
-                                {{-- Colonne Statut --}}
                                 <td class="whitespace-nowrap px-3 py-2 text-sm text-center">
                                     @if($isProtected)
                                         <span
@@ -211,23 +233,18 @@ new #[Title('Gestion des rôles')]
                                     @endif
                                 </td>
 
-                                {{-- Colonne Actions --}}
-                                <td class="whitespace-nowrap py-2 px-3 text-right text-sm">
-
+                                <td class="whitespace-nowrap py-4 pl-3 pr-4 text-sm text-right sm:pr-6">
                                     <flux:dropdown position="bottom" align="end">
-
                                         <flux:button icon="ellipsis-vertical" size="sm" variant="ghost" title="Actions"
                                             inset />
-
                                         <flux:menu class="min-w-32!">
-                                            <div class="flex flex-col items-center space-y-1">
-                                                {{-- Ouvre la modale ViewRolePermissions --}}
+                                            <div class="space-y-1 flex flex-col">
                                                 @can('edit users')
                                                     <flux:button class="w-full" icon="eye" variant="info"
                                                         wire:click="$dispatch('view-role-permissions', { roleId: {{ $role->id }} })">
                                                         Permissions
                                                     </flux:button>
-                                                @endcan{{-- Ouvre la modale EditRole --}}
+                                                @endcan
                                                 @can('edit roles')
                                                     <flux:button class="w-full" icon="pencil-square" variant="info"
                                                         wire:click="$dispatch('edit-role', { roleId: {{ $role->id }} })">
@@ -235,8 +252,6 @@ new #[Title('Gestion des rôles')]
                                                     </flux:button>
                                                 @endcan
                                             </div>
-
-                                            {{-- Option Supprimer --}}
                                             @can('delete roles')
                                                 @if(!$isProtected)
                                                     <flux:menu.separator />
@@ -245,7 +260,6 @@ new #[Title('Gestion des rôles')]
                                                         confirm="Êtes-vous sûr de vouloir supprimer ce rôle ? Cette action est irréversible.">
                                                         Supprimer
                                                     </flux:button>
-
                                                 @endif
                                             @endcan
                                         </flux:menu>
@@ -254,7 +268,7 @@ new #[Title('Gestion des rôles')]
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="5" class="text-center py-8 text-sm text-gray-500">
+                                <td colspan="5" class="text-center py-8 text-sm text-gray-500 ">
                                     @if($search)
                                         Aucun rôle ne correspond à "{{ $search }}"
                                     @else

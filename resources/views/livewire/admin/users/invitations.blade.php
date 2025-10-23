@@ -9,7 +9,6 @@ use App\Mail\UserInvitationMail;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Mail;
-// ✅ CORRECTION 1 : On donne un alias "UrlBuilder" à la classe URL
 use Illuminate\Support\Facades\URL as UrlBuilder;
 
 new #[Title('Gestion des invitations')]
@@ -22,6 +21,9 @@ new #[Title('Gestion des invitations')]
     #[Url]
     public int $perPage = 10;
 
+    public string $sortField = 'created_at';
+    public string $sortDirection = 'desc';
+
     public function mount(): void
     {
         Gate::authorize('create users');
@@ -31,6 +33,16 @@ new #[Title('Gestion des invitations')]
     {
         if (in_array($property, ['search', 'perPage'])) {
             $this->resetPage();
+        }
+    }
+
+    public function sortBy(string $field): void
+    {
+        if ($this->sortField === $field) {
+            $this->sortDirection = $this->sortDirection === 'asc' ? 'desc' : 'asc';
+        } else {
+            $this->sortField = $field;
+            $this->sortDirection = 'asc';
         }
     }
 
@@ -45,7 +57,6 @@ new #[Title('Gestion des invitations')]
             return;
         }
 
-        // ✅ CORRECTION 2 : On utilise le nouvel alias "UrlBuilder"
         $signedUrl = UrlBuilder::temporarySignedRoute(
             'register.invitation',
             now()->addDays(7),
@@ -65,7 +76,7 @@ new #[Title('Gestion des invitations')]
             ->when($this->search, function (Builder $query, $search) {
                 $query->where('email', 'like', "%{$search}%");
             })
-            ->latest()
+            ->orderBy($this->sortField, $this->sortDirection)
             ->paginate($this->perPage);
 
         return [
@@ -75,12 +86,8 @@ new #[Title('Gestion des invitations')]
 };
 ?>
 
-<x-layouts.content :heading="__('Administration')"
-    :subheading="__('Gestion des Utilisateurs.')" 
-    :pageHeading="__('Invitations')"
-    :pageSubheading="__('Suivez et gérez les invitations envoyées aux nouveaux utilisateurs.')">
-
-    
+<x-layouts.content :heading="__('Administration')" :subheading="__('Gestion des Utilisateurs.')"
+    :pageHeading="__('Invitations')" :pageSubheading="__('Suivez et gérez les invitations envoyées aux nouveaux utilisateurs.')">
 
     {{-- Messages Flash --}}
     @if (session()->has('success') || session()->has('error'))
@@ -118,31 +125,62 @@ new #[Title('Gestion des invitations')]
             <table class="min-w-full divide-y divide-gray-300">
                 <thead class="bg-gray-50">
                     <tr>
-                        <th scope="col" class="py-2.5 p-3 text-left text-sm font-semibold text-gray-900">Email</th>
-                        <th scope="col" class="p-3 py-2.5 text-left text-sm font-semibold text-gray-900">Statut</th>
-                        <th scope="col" class="p-3 py-2.5 text-left text-sm font-semibold text-gray-900">Date d'envoi
+                        <th scope="col" class="py-2.5 px-3 text-left text-sm font-semibold text-gray-500">
+                            <button wire:click="sortBy('email')" class="flex items-center gap-1.5 group">
+                                <span>Email</span>
+                                @if ($sortField === 'email')
+                                    <flux:icon.chevron-up
+                                        class="w-3 h-3 transition-transform {{ $sortDirection === 'asc' ? 'rotate-180' : '' }}" />
+                                @else
+                                    <flux:icon.chevrons-up-down
+                                        class="w-3 h-3 text-gray-400 transition-opacity group-hover:opacity-100 opacity-0" />
+                                @endif
+                            </button>
                         </th>
-                        <th scope="col" class="p-3 py-2.5 text-left text-sm font-semibold text-gray-900">Date
-                            d'inscription</th>
+                        <th scope="col" class="py-2.5 px-3 text-left text-sm font-semibold text-gray-500">Statut</th>
+                        <th scope="col" class="py-2.5 px-3 text-left text-sm font-semibold text-gray-500">
+                            <button wire:click="sortBy('created_at')" class="flex items-center gap-1.5 group">
+                                <span>Date d'envoi</span>
+                                @if ($sortField === 'created_at')
+                                    <flux:icon.chevron-up
+                                        class="w-3 h-3 transition-transform {{ $sortDirection === 'asc' ? 'rotate-180' : '' }}" />
+                                @else
+                                    <flux:icon.chevrons-up-down
+                                        class="w-3 h-3 text-gray-400 transition-opacity group-hover:opacity-100 opacity-0" />
+                                @endif
+                            </button>
+                        </th>
+                        <th scope="col" class="py-2.5 px-3 text-left text-sm font-semibold text-gray-500">
+                            <button wire:click="sortBy('registered_at')" class="flex items-center gap-1.5 group">
+                                <span>Date d'inscription</span>
+                                @if ($sortField === 'registered_at')
+                                    <flux:icon.chevron-up
+                                        class="w-3 h-3 transition-transform {{ $sortDirection === 'asc' ? 'rotate-180' : '' }}" />
+                                @else
+                                    <flux:icon.chevrons-up-down
+                                        class="w-3 h-3 text-gray-400 transition-opacity group-hover:opacity-100 opacity-0" />
+                                @endif
+                            </button>
+                        </th>
                         <th scope="col" class="relative py-2.5 pl-3 pr-4 sm:pr-6"><span class="sr-only">Actions</span>
                         </th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-200 bg-white">
                     @forelse ($invitations as $invitation)
-                        <tr wire:key="invitation-{{ $invitation->id }}" class="hover:bg-gray-50">
-                            <td class="whitespace-nowrap py-4 p-3 text-sm font-medium text-gray-900">
+                        <tr wire:key="invitation-{{ $invitation->id }}">
+                            <td class="whitespace-nowrap py-2 p-3 text-sm font-medium text-gray-900">
                                 {{ $invitation->email }}</td>
-                            <td class="whitespace-nowrap px-3 py-4 text-sm">
+                            <td class="whitespace-nowrap px-3 py-2 text-sm">
                                 @if ($invitation->registered_at)
                                     <flux:badge color="success" icon="check-circle">Inscrit</flux:badge>
                                 @else
                                     <flux:badge color="warning" icon="clock">En attente</flux:badge>
                                 @endif
                             </td>
-                            <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                            <td class="whitespace-nowrap px-3 py-2 text-sm text-gray-500">
                                 {{ $invitation->created_at->translatedFormat('d F Y à H:i') }}</td>
-                            <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                            <td class="whitespace-nowrap px-3 py-2 text-sm text-gray-500">
                                 {{ $invitation->registered_at ? $invitation->registered_at->translatedFormat('d F Y à H:i') : '—' }}
                             </td>
                             <td class="whitespace-nowrap py-4 pl-3 pr-4 text-sm text-right sm:pr-6">
