@@ -1,13 +1,14 @@
 <?php
 
+use App\Mail\TestMail;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Route;
 use Laravel\Fortify\Features;
 use Livewire\Volt\Volt;
-use Illuminate\Support\Facades\Mail;
-use App\Mail\TestMail;
 
 Route::get('/test-mail', function () {
-    Mail::to('test@example.com')->send(new TestMail());
+    Mail::to('test@example.com')->send(new TestMail);
+
     return 'Email de test envoyé ! Vérifiez votre boîte Mailtrap.';
 });
 
@@ -24,6 +25,13 @@ Volt::route('/creer-mon-profil', 'settings/create-profile')
 Route::middleware(['auth', 'verified', 'profile.completed'])->group(function () {
 
     Volt::route('/', 'dashboard/index')->name('dashboard');
+
+    Route::prefix('clients')->as('clients.')->group(function () {   
+        Volt::route('/', 'client/index')->name('index');
+        Volt::route('create', 'client/create-client')->name('create');
+        Volt::route('edit/{client}', 'client/edit-client')->name('edit');
+        Volt::route('show/{client}', 'client/show-client')->name('show');
+    });
 
     // User Settings
     Route::prefix('settings')->as('settings.')->group(function () {
@@ -43,10 +51,10 @@ Route::middleware(['auth', 'verified', 'profile.completed'])->group(function () 
             )
             ->name('two-factor');
     });
-    
+
     // Admin Routes
     Route::prefix('admin')->as('admin.')->middleware('role:Ghost|Admin')->group(function () {
-        
+
         // Gestion des utilisateurs
         Volt::route('users', 'admin.users.index')
             ->name('users.index')
@@ -54,14 +62,17 @@ Route::middleware(['auth', 'verified', 'profile.completed'])->group(function () 
 
         // ✅ AJOUTEZ CETTE LIGNE POUR LES INVITATIONS
         Volt::route('invitations', 'admin.users.invitations')
-        ->name('invitations.index');
-        
+            ->name('invitations.index');
+
         // Gestion des rôles et permissions
         Volt::route('roles', 'admin.roles.index')
             ->name('roles.index')
             ->can('view roles');
 
-            
+        Volt::route('roles/audit', 'admin.roles.audit-history')
+            ->name('roles.audit')
+            ->can('view roles');
+
     });
 
     Route::get('/test-roles', function () {

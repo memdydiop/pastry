@@ -1,15 +1,16 @@
 <?php
-// ... (code PHP de la classe Volt inchangé)
 
+// ... (Les use statements restent les mêmes)
 use Livewire\Volt\Component;
 use App\Models\User;
 use Livewire\WithPagination;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
-use Livewire\Attributes\On; // Ajouté pour l'écoute
+use Livewire\Attributes\On;
 use Spatie\Permission\Models\Role;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\DB; // Assurez-vous d'importer DB
 
 new #[Title('Gestion des utilisateurs')]
     class extends Component {
@@ -22,13 +23,20 @@ new #[Title('Gestion des utilisateurs')]
     public string $roleFilter = '';
     #[Url]
     public int $perPage = 10;
+
+    // START: Propriétés pour le tri
+    #[Url]
+    public string $sortBy = 'created_at';
+    #[Url]
+    public string $sortDirection = 'asc';
+    // END: Propriétés pour le tri
+
     public array $availableRoles = [];
 
-    // Écoute l'événement du composant modal pour rafraîchir la liste
     #[On('roles-updated')]
     public function refreshList()
     {
-        $this->resetPage(); // On réinitialise la page pour un rafraîchissement complet
+        $this->resetPage();
     }
 
     public function updated($property): void
@@ -40,53 +48,65 @@ new #[Title('Gestion des utilisateurs')]
 
     public function mount(): void
     {
-        // Vérifie la permission d'accès à la page
-        Gate::authorize('view users'); // ⬅️ Utilisation de Gate::authorize
-
+        Gate::authorize('view users');
         $this->availableRoles = Role::pluck('name', 'name')->toArray();
     }
 
+    // START: Méthode pour le tri
+    public function sortBy(string $field): void
+    {
+        if ($this->sortBy === $field) {
+            $this->sortDirection = $this->sortDirection === 'asc' ? 'desc' : 'asc';
+        } else {
+            $this->sortDirection = 'asc';
+        }
+
+        $this->sortBy = $field;
+        $this->resetPage();
+    }
+    // END: Méthode pour le tri
+
     public function with(): array
     {
-
-        // Le with() est appelé même si l'utilisateur n'a pas la permission, 
-        // donc on peut retourner une collection vide si l'accès a échoué au mount.
         if (!Gate::allows('view users')) {
             return ['users' => collect()];
         }
 
-        $users = User::with(['roles', 'profile'])
-            ->select([
-                'users.*',
-                'email_verified_at',
-                'two_factor_confirmed_at',
-                'two_factor_secret',
-                'created_at',
-                'profile_completed'
-            ])
+        $usersQuery = User::query()
+            ->select('users.*', 'user_profiles.full_name as profile_full_name') // Créer un alias pour le tri
+            ->leftJoin('user_profiles', 'users.id', '=', 'user_profiles.user_id') // 👈 CORRECTION: Utiliser le bon nom de table
+            ->with(['roles', 'profile']) // Eager load les relations après la jointure
             ->when($this->search, function (Builder $query, $search) {
-                $query->where('email', 'like', "%{$search}%")
-                    ->orWhereHas('profile', function (Builder $query) use ($search) {
-                        $query->where('full_name', 'like', "%{$search}%");
-                    });
+                // Utiliser une closure pour grouper les conditions OR
+                $query->where(function (Builder $q) use ($search) {
+                    $q->where('users.email', 'like', "%{$search}%")
+                        ->orWhere('user_profiles.full_name', 'like', "%{$search}%"); // 👈 CORRECTION
+                });
             })
-            ->when($this->roleFilter, fn(Builder $query, $role) => $query->role($role))
-            ->orderBy('created_at', 'asc')
-            ->paginate($this->perPage);
+            ->when($this->roleFilter, fn(Builder $query, $role) => $query->role($role));
+
+        // START: Logique de tri dynamique
+        if ($this->sortBy === 'roles.name') {
+            $usersQuery
+                ->leftJoin('model_has_roles', 'users.id', '=', 'model_has_roles.model_id')
+                ->leftJoin('roles', 'model_has_roles.role_id', '=', 'roles.id')
+                ->groupBy('users.id', 'user_profiles.full_name') // Important de grouper pour éviter les doublons
+                ->orderBy(DB::raw('MIN(roles.name)'), $this->sortDirection);
+        } else {
+            // Utiliser l'alias pour le nom de profil, sinon le nom de la colonne de la table users
+            $sortField = $this->sortBy === 'profile_full_name' ? 'profile_full_name' : 'users.' . $this->sortBy;
+            $usersQuery->orderBy($sortField, $this->sortDirection);
+        }
+        // END: Logique de tri dynamique
 
         return [
-            'users' => $users,
+            'users' => $usersQuery->paginate($this->perPage),
         ];
     }
 
-    /**
-     * Méthode de suppression d'utilisateur (avec vérifications de sécurité).
-     */
     public function deleteUser(int $userId): void
     {
-        // ⬅️ Utilisation de Gate::authorize pour lever automatiquement une exception 403
         Gate::authorize('delete users');
-
         $user = User::find($userId);
 
         if ($user) {
@@ -94,10 +114,8 @@ new #[Title('Gestion des utilisateurs')]
                 session()->flash('error', 'Vous ne pouvez pas supprimer votre propre compte.');
                 return;
             }
-
-            // Supprimer l'utilisateur
             $user->delete();
-            $this->resetPage(); // Reset pour rafraîchir la liste après suppression
+            $this->resetPage();
             session()->flash('success', 'Utilisateur supprimé avec succès.');
         }
     }
@@ -124,7 +142,6 @@ new #[Title('Gestion des utilisateurs')]
             <span class="font-medium">{{ session('success') ?? session('error') }}</span>
         </div>
     @endif
-
 
     <div class="space-y-6">
         <x-card class="">
@@ -176,34 +193,54 @@ new #[Title('Gestion des utilisateurs')]
                 <table class="min-w-full divide-y divide-gray-300 ">
                     <thead class="bg-gray-50 ">
                         <tr>
-                            <th scope="col" class="py-2.5 p-3 text-left text-sm font-semibold text-gray-900">
-                                Utilisateur</th>
-                            {{-- <th scope="col"
-                                class="p-3 py-2.5 text-left text-sm font-semibold text-gray-900 max-sm:hidden">
-                                Email</th> --}}
-                            <th scope="col" class="p-3 py-2.5 text-left text-sm font-semibold text-gray-900 ">
-                                Rôles</th>
-                            <th scope="col"
-                                class="p-3 py-2.5 text-center text-sm font-semibold text-gray-900 max-sm:hidden"
-                                title="Statut de vérification de l'adresse email">
-                                Email Vérifié</th>
-                            <th scope="col"
-                                class="p-3 py-2.5 text-center text-sm font-semibold text-gray-900 max-sm:hidden"
-                                title="Statut de l'authentification à deux facteurs">
-                                2FA</th>
-                            <th scope="col"
-                                class="p-3 py-2.5 text-left text-sm font-semibold text-gray-900 max-sm:hidden"
-                                title="Date d'inscription de l'utilisateur">
-                                Inscrit le</th>
-                            <th scope="col"
-                                class="p-3 py-2.5 text-center text-sm font-semibold text-gray-900 max-sm:hidden"
-                                title="Statut de complétion du profil">
-                                Profil Complété</th>
-                            <th scope="col" class="relative py-2.5 pl-3 pr-4 sm:pr-6">
-                                <span class=" sr-only">Actions</span>
+                            {{-- Colonne Utilisateur (Triable) --}}
+                            <th scope="col" class="py-2.5 px-3 text-left text-sm font-semibold text-gray-500">
+                                <button wire:click="sortBy('profile_full_name')" class="flex items-center gap-1.5 group">
+                                    <span>Utilisateur</span>
+                                    @if ($sortBy === 'profile_full_name')
+                                        <flux:icon.chevron-up
+                                            class="w-3 h-3 transition-transform {{ $sortDirection === 'asc' ? 'rotate-180' : '' }}" />
+                                    @else
+                                        <flux:icon.chevrons-up-down
+                                            class="w-3 h-3 text-gray-400 transition-opacity group-hover:opacity-100 opacity-0" />
+                                    @endif
+                                </button>
                             </th>
-                        </tr>
-                    </thead>
+                    
+                            {{-- Colonne Rôles (Triable) --}}
+                            <th scope="col" class="px-3 py-2.5 text-left text-sm font-semibold text-gray-500 ">
+                                <button wire:click="sortBy('roles.name')" class="flex items-center gap-1.5 group">
+                                    <span>Rôles</span>
+                                    @if ($sortBy === 'roles.name')
+                                        <flux:icon.chevron-up
+                                            class="w-3 h-3 transition-transform {{ $sortDirection === 'asc' ? 'rotate-180' : '' }}" />
+                                    @else
+                                        <flux:icon.chevrons-up-down
+                                            class="w-3 h-3 text-gray-400 transition-opacity group-hover:opacity-100 opacity-0" />
+                                    @endif
+                                </button>
+                            </th>
+                    
+                            <th scope="col" class="px-3 py-2.5 text-center text-sm font-semibold text-gray-500 max-sm:hidden"
+                                title="Statut de vérification de l'adresse email">
+                                Email Vérifié
+                            </th>
+                            <th scope="col" class="px-3 py-2.5 text-center text-sm font-semibold text-gray-500 max-sm:hidden"
+                                title="Statut de l'authentification à deux facteurs">
+                                2FA
+                            </th>
+                            <th scope="col" class="px-3 py-2.5 text-left text-sm font-semibold text-gray-500 max-sm:hidden"
+                                title="Date d'inscription de l'utilisateur">
+                                Inscrit le
+                            </th>
+                            <th scope="col" class="px-3 py-2.5 text-center text-sm font-semibold text-gray-500 max-sm:hidden"
+                                title="Statut de complétion du profil">
+                                Profil Complété
+                            </th>
+                            <th scope="col" class="relative py-2.5 pl-3 pr-4 sm:pr-6">
+                                <span class="sr-only">Actions</span>
+                            </th>
+                        </tr>    </thead>
                     <tbody class="divide-y divide-gray-200 bg-white ">
                         @forelse ($users as $user)
                             <tr wire:key="{{ $user->id }}">

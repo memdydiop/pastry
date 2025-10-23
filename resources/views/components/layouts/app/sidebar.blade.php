@@ -19,6 +19,14 @@
                     wire:navigate>
                     {{ __('Dashboard') }}
                 </flux:navlist.item>
+                
+                    @can('view clients')
+                        <flux:navlist.item icon="users" :href="route('clients.index')"
+                            :current="request()->routeIs('clients.index')" wire:navigate>
+                            {{ __('Clients') }}
+                        </flux:navlist.item>
+                    @endcan
+                    
 
             </flux:navlist.group>
         </flux:navlist>
@@ -26,34 +34,38 @@
         <flux:spacer />
         <flux:navlist variant="outline">
             @can('view administration')
-            <flux:navlist.group :heading="__('Administration')">
+                <flux:navlist.group :heading="__('Administration')">
 
-                <flux:navlist.group icon="user-group" heading="Gestion des Utilisateurs" expandable>
-                    @can('view users')
-                        <flux:navlist.item icon="users" :href="route('admin.users.index')" :current="request()->routeIs('admin.users.index')"
-                            wire:navigate>
-                            {{ __('Utilisateurs') }}
+                    <flux:navlist.group icon="user-group" heading="Gestion des Utilisateurs" expandable>
+                        @can('view users')
+                            <flux:navlist.item icon="users" :href="route('admin.users.index')"
+                                :current="request()->routeIs('admin.users.index')" wire:navigate>
+                                {{ __('Utilisateurs') }}
+                            </flux:navlist.item>
+                        @endcan
+                        @can('create users')
+                            <flux:navlist.item icon="envelope" :href="route('admin.invitations.index')"
+                                :current="request()->routeIs('admin.invitations.index')" wire:navigate>
+                                {{ __('Invitations') }}
+                            </flux:navlist.item>
+                        @endcan
+                    </flux:navlist.group>
+
+                    @can('view roles')
+                        <flux:navlist.item icon="shield-check" :href="route('admin.roles.index')"
+                            :current="request()->routeIs('admin.roles.index')" wire:navigate>
+                            {{ __('Rôles & Permissions') }}
+                        </flux:navlist.item>
+                        <flux:navlist.item icon="shield-check" :href="route('admin.roles.audit')"
+                            :current="request()->routeIs('admin.roles.audit')" wire:navigate>
+                            {{ __('Audit history') }}
                         </flux:navlist.item>
                     @endcan
-                    @can('create users')
-                        <flux:navlist.item icon="envelope" :href="route('admin.invitations.index')"
-                            :current="request()->routeIs('admin.invitations.index')" wire:navigate>
-                            {{ __('Invitations') }}
-                        </flux:navlist.item>
-                    @endcan
-                </flux:navlist.group>
 
-                @can('view roles')
-                    <flux:navlist.item icon="shield-check" :href="route('admin.roles.index')"
-                        :current="request()->routeIs('admin.roles.index')" wire:navigate>
-                        {{ __('Rôles & Permissions') }}
-                    </flux:navlist.item>
-                @endcan
-
-                </flux:sidebar.group>
-        @endcan
+                    </flux:sidebar.group>
+            @endcan
         </flux:navlist>
-        
+
         <!-- Desktop User Menu -->
         <flux:dropdown class="hidden lg:block" position="bottom" align="start">
             <flux:profile :name="auth()->user()->name" :avatar="auth()->user()->avatar"

@@ -11,6 +11,7 @@ class DatabaseSeeder extends Seeder
     {
         // 1. Créer les permissions et rôles
         $this->call(PermissionsSeeder::class);
+        $this->call(ClientSeeder::class);
 
         // 2. Créer l'utilisateur Ghost
         $ghost = User::factory()->create([

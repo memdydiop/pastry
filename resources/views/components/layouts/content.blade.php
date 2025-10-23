@@ -27,10 +27,6 @@
                 </div>
             </div>
             @endif
-
-                <x-action-message class="me-3" on="profile-updated">
-                    {{ __('Profil mis à jour !') }}
-                </x-action-message>
             {{ $slot }}
         </div>
     </div>
