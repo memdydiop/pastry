@@ -18,12 +18,7 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->string('telephone');
             $table->string('telephone_secondaire')->nullable();
-            $table->date('date_naissance')->nullable();
-            
-            // Préférences
-            $table->json('preferences_alimentaires')->nullable(); // allergies, régimes
-            $table->json('produits_favoris')->nullable();
-            
+                        
             // Fidélité
             $table->integer('points_fidelite')->default(0);
             $table->decimal('score_client', 8, 2)->default(0);

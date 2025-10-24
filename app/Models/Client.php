@@ -19,9 +19,6 @@ class Client extends Model
         'email',
         'telephone',
         'telephone_secondaire',
-        'date_naissance',
-        'preferences_alimentaires',
-        'produits_favoris',
         'points_fidelite',
         'score_client',
         'notes',
@@ -29,7 +26,6 @@ class Client extends Model
 
     protected $casts = [
         'type' => TypeClient::class,
-        'date_naissance' => 'date',
         'preferences_alimentaires' => 'array',
         'produits_favoris' => 'array',
         'points_fidelite' => 'integer',
@@ -55,9 +51,6 @@ class Client extends Model
         if ($this->type === TypeClient::ENTREPRISE) {
             return $this->raison_sociale ?? '';
         }
-        
-        //return trim("{{$this->nom}");
-        // CORRECTION: Correction de la syntaxe de l'accesseur pour les particuliers
         return $this->nom ?? '';
     }
 

@@ -26,12 +26,11 @@ Route::middleware(['auth', 'verified', 'profile.completed'])->group(function () 
 
     Volt::route('/', 'dashboard/index')->name('dashboard');
 
-    Route::prefix('clients')->as('clients.')->group(function () {   
-        Volt::route('/', 'client/index')->name('index');
-        Volt::route('create', 'client/create-client')->name('create');
-        Volt::route('edit/{client}', 'client/edit-client')->name('edit');
-        Volt::route('show/{client}', 'client/show-client')->name('show');
-    });
+        // Clients
+        Volt::route('clients', 'client.index')->name('clients.index');
+
+        // Commandes
+        Volt::route('commandes', 'commande.index')->name('commandes.index');
 
     // User Settings
     Route::prefix('settings')->as('settings.')->group(function () {
