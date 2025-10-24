@@ -49,9 +49,11 @@ class PermissionsSeeder extends Seeder
 
             // --- AJOUTEZ VOS NOUVELLES PERMISSIONS CI-DESSOUS ---
             
-            // Exemple : Gestion des Rapports
-            // 'view reports',
-            // 'export reports',
+            // Gestion des Clients
+            'view clients',
+            'create clients',
+            'edit clients',
+            'delete clients',
         ];
     }
 
@@ -86,6 +88,10 @@ class PermissionsSeeder extends Seeder
             'view administration',
             'view settings',
             'view reports', 'export reports',
+            'view clients',
+            'create clients',
+            'edit clients',
+            'delete clients',
         ]);
 
         // Le "User" obtient un ensemble de permissions de base
