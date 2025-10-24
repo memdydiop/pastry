@@ -95,7 +95,11 @@ new #[Title('Gestion des rôles')]
 
 ?>
 
-<x-layouts.content :heading="__('Administration')" :subheading="__('Gestion des Utilisateurs')" :pageHeading="__('Rôles & Permissions')" :pageSubheading="__('Gérez les rôles et leurs permissions')">
+<x-layouts.content 
+    :heading="__('Administration')" 
+    :subheading="__('Gestion des Utilisateurs')" 
+    :pageHeading="__('Rôles & Permissions')" 
+    :pageSubheading="__('Gérez les rôles et leurs permissions')">
 
     <x-slot name="actions">
         @can('create roles')

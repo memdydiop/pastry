@@ -51,7 +51,7 @@ new class extends Component {
         }
 
         $this->user->syncRoles($this->userRoles);
-        $this->dispatch('roles-updated');
+        $this->dispatch('user-roles-updated');
         session()->flash('success', "Les rôles de {$this->user->name} ont été mis à jour.");
         $this->closeModal();
     }

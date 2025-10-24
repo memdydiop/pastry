@@ -41,6 +41,13 @@ class Client extends Model
     {
         return $this->hasMany(Adresse::class);
     }
+    
+    // NOUVEAU: Ajout du placeholder pour la relation Commandes
+    //public function commandes(): HasMany
+    //{
+        // Supposons que le modèle Commande existe
+    //    return $this->hasMany(\App\Models\Commande::class);
+    //}
 
     // Accessors
     public function getNomCompletAttribute(): string
@@ -49,7 +56,9 @@ class Client extends Model
             return $this->raison_sociale ?? '';
         }
         
-        return trim("{{$this->nom}");
+        //return trim("{{$this->nom}");
+        // CORRECTION: Correction de la syntaxe de l'accesseur pour les particuliers
+        return $this->nom ?? '';
     }
 
     public function getAdresseDefaultAttribute(): ?Adresse
@@ -90,7 +99,8 @@ class Client extends Model
             $q->where('nom', 'like', "%{$search}%")
               ->orWhere('raison_sociale', 'like', "%{$search}%")
               ->orWhere('email', 'like', "%{$search}%")
-              ->orWhere('telephone', 'like', "%{$search}%");
+              ->orWhere('telephone', 'like', "%{$search}%")
+              ->orWhere('telephone_secondaire', 'like', "%{$search}%");;
         });
     }
 

@@ -216,8 +216,7 @@ new class extends Component {
                                 <td class="whitespace-nowrap px-3 py-2 text-sm text-gray-500">
                                     @if ($user->roles->isNotEmpty())
                                         @foreach ($user->roles as $role)
-                                            <span
-                                                class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
                                                 {{ $role->name }}
                                             </span>
                                         @endforeach
@@ -239,13 +238,15 @@ new class extends Component {
                                     <flux:dropdown position="bottom" align="end">
                                         <flux:button icon="ellipsis-vertical" size="sm" variant="ghost" title="Actions" inset />
                                         <flux:menu class="min-w-32!">
-                                            <div class="flex flex-col">
+                                            <div class="flex flex-col gap-1">
                                                 @can('edit users')
-                                                    <flux:button class="w-full" icon="user-circle" variant="info">
-                                                        Voir le profil
-                                                    </flux:button>
-                                                    <flux:button class="w-full mt-1" icon="key" variant="info"
+                                                    <flux:button class="w-full" icon="eye" variant="info"
                                                         wire:click="$dispatch('openModal', { component: 'admin.users.edit-roles', arguments: { userId: {{ $user->id }} }})">
+                                                        Plus
+                                                    </flux:button>
+
+                                                    <flux:button class="w-full" icon="pencil-square" variant="warning"
+                                                        wire:click="$dispatch('edit-user-roles', { userId: {{ $user->id }} })">
                                                         Gérer les rôles
                                                     </flux:button>
                                                 @endcan

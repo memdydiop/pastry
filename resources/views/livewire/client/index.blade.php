@@ -6,6 +6,8 @@ use Livewire\WithPagination;
 use Livewire\Attributes\Url;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Gate;
+use Livewire\Attributes\On; // NOUVEAU: Pour écouter l'événement de rafraîchissement
+use App\Services\ClientService; // NOUVEAU: Import ClientService
 
 new class extends Component {
     use WithPagination;
@@ -18,6 +20,12 @@ new class extends Component {
 
     public string $sortField = 'created_at';
     public string $sortDirection = 'desc';
+
+    // NOUVEAU: Injection du service par méthode boot()
+    public function boot(ClientService $clientService)
+    {
+        $this->clientService = $clientService;
+    }
 
     public function mount(): void
     {
@@ -34,6 +42,13 @@ new class extends Component {
         }
     }
 
+    // NOUVEAU: Écouteur pour l'événement de rafraîchissement (utilisé par le modal de suppression)
+    #[On('refreshData')]
+    public function refreshClients(): void
+    {
+        $this->resetPage();
+    }
+
     public function deleteClient(Client $client): void
     {
         Gate::authorize('delete clients');
@@ -43,16 +58,13 @@ new class extends Component {
 
     public function with(): array
     {
-        $clients = Client::query()
-            ->when($this->search, function (Builder $query) {
-                $query->where('nom_complet', 'like', '%' . $this->search . '%')
-                    ->orWhere('email', 'like', '%' . $this->search . '%')
-                    ->orWhere('telephone', 'like', '%' . $this->search . '%');
-            })
-            ->orderBy($this->sortField, $this->sortDirection)
-            ->paginate($this->perPage);
-
-            
+        // REFACTORING: Délégation au service pour la logique de requête
+        $clients = $this->clientService->getPaginatedClients(
+            $this->search,
+            $this->sortField,
+            $this->sortDirection,
+            $this->perPage
+        );
 
         return [
             'clients' => $clients,
@@ -60,8 +72,9 @@ new class extends Component {
     }
 }; ?>
 
-<x-layouts.content heading="Gestion des Clients"
-    subheading="Affichez, créez et gérez les fiches de vos clients.">
+<x-layouts.content :heading="__('Gestion des Clients')" :subheading="__('Affichez, créez et gérez les fiches de vos clients.')" :pageHeading="__('Gestion des Clients')" :pageSubheading="__('Affichez, créez et gérez les fiches de vos clients.')">
+
+
     <x-slot name="actions">
         @can('create clients')
             <flux:button wire:click="$dispatch('openModal', { component: 'client.create-client' })" icon="plus"
@@ -101,6 +114,7 @@ new class extends Component {
             <table class="min-w-full divide-y divide-gray-300">
                 <thead class="bg-gray-50">
                     <tr>
+                        
                         <th scope="col" class="py-2.5 px-3 text-left text-sm font-semibold text-gray-500">
                             <button wire:click="sortBy('nom_complet')" class="flex items-center gap-1.5 group">
                                 <span>Nom du client</span>
@@ -114,20 +128,8 @@ new class extends Component {
                             </button>
                         </th>
                         <th scope="col" class="px-3 py-2.5 text-left text-sm font-semibold text-gray-500">
-                            <button wire:click="sortBy('type_client')" class="flex items-center gap-1.5 group">
-                                <span>Type</span>
-                                @if ($sortField === 'type_client')
-                                    <flux:icon.chevron-up
-                                        class="w-3 h-3 transition-transform {{ $sortDirection === 'asc' ? 'rotate-180' : '' }}" />
-                                @else
-                                    <flux:icon.chevrons-up-down
-                                        class="w-3 h-3 text-gray-400 transition-opacity group-hover:opacity-100 opacity-0" />
-                                @endif
-                            </button>
-                        </th>
-                        <th scope="col" class="px-3 py-2.5 text-left text-sm font-semibold text-gray-500">
                             <button wire:click="sortBy('email')" class="flex items-center gap-1.5 group">
-                                <span>Email</span>
+                                <span>Contact</span>
                                 @if ($sortField === 'email')
                                     <flux:icon.chevron-up
                                         class="w-3 h-3 transition-transform {{ $sortDirection === 'asc' ? 'rotate-180' : '' }}" />
@@ -137,10 +139,11 @@ new class extends Component {
                                 @endif
                             </button>
                         </th>
+                        {{-- NOUVEAU: Colonne Score/VIP --}}
                         <th scope="col" class="px-3 py-2.5 text-left text-sm font-semibold text-gray-500">
-                            <button wire:click="sortBy('telephone')" class="flex items-center gap-1.5 group">
-                                <span>Téléphone</span>
-                                @if ($sortField === 'telephone')
+                            <button wire:click="sortBy('score_client')" class="flex items-center gap-1.5 group">
+                                <span>Score</span>
+                                @if ($sortField === 'score_client')
                                     <flux:icon.chevron-up
                                         class="w-3 h-3 transition-transform {{ $sortDirection === 'asc' ? 'rotate-180' : '' }}" />
                                 @else
@@ -158,28 +161,42 @@ new class extends Component {
                     @forelse ($clients as $client)
                         <tr wire:key="client-{{ $client->id }}">
                             <td class="whitespace-nowrap py-2 p-3 text-sm font-medium text-gray-900">
-                                {{ $client->nom_complet }}
-                            </td>
-                            <td class="whitespace-nowrap px-3 py-2 text-sm text-gray-500 {{ $client->type->value === 'entreprise' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800' }}">
-                                {{ $client->type_client->label() }}
+                                <div class="flex items-end  gap-2">
+                                    @if ($client->type?->value === 'particulier')
+                                        <flux:icon.user class="!size-5 text-gray-400" />
+                                    @else
+                                        <flux:icon.building-office-2 class="!size-5 text-gray-400" />
+                                    @endif
+                                    <span class="@if ($client->estVip())text-success @endif">{{ $client->nom_complet }}</span>
+                                    
+                                </div>
                             </td>
                             <td class="whitespace-nowrap px-3 py-2 text-sm text-gray-500">
-                                {{ $client->email }}
+                                <div class="flex flex-col">
+                                    {{ $client->email }}
+                                    @if ($client->telephone)
+                                        <span class="text-xs text-gray-500">{{ $client->telephone }}</span>
+                                    @endif
+                                </div>
                             </td>
+                            {{-- NOUVEAU: Affichage du Score ou du badge VIP --}}
                             <td class="whitespace-nowrap px-3 py-2 text-sm text-gray-500">
-                                {{ $client->telephone }}
+                                <div class="flex">
+                                    {{ number_format($client->score_client, 0) ?? 'N/A' }}
+
+                                </div>
                             </td>
                             <td class="whitespace-nowrap py-4 pl-3 pr-4 text-sm text-right sm:pr-6">
                                 <flux:dropdown position="bottom" align="end">
-                                    <flux:button icon="ellipsis-vertical" size="sm" variant="ghost"
-                                        title="Actions" inset />
+                                    <flux:button icon="ellipsis-vertical" size="sm" variant="ghost" title="Actions" inset />
                                     <flux:menu class="min-w-32!">
                                         <div class="flex flex-col">
                                             @can('view clients')
-                                                <flux:button class="w-full" icon="eye" variant="info"
-                                                    wire:click="$dispatch('openModal', { component: 'client.show-client', arguments: { client: {{ $client->id }} }})">
-                                                    Voir
-                                                </flux:button>
+                                                <flux:modal.trigger name="show-client">
+                                                    <flux:button class="w-full" icon="eye" variant="info">
+                                                        Voir
+                                                    </flux:button>
+                                                </flux:modal.trigger>
                                             @endcan
                                             @can('edit clients')
                                                 <flux:button class="w-full mt-1" icon="pencil-square" variant="info"
@@ -189,10 +206,10 @@ new class extends Component {
                                             @endcan
                                         </div>
                                         @can('delete clients')
-                                             <flux:menu.separator />
+                                            <flux:menu.separator />
+                                            {{-- AMÉLIORATION UX: Dispatch vers un modal de confirmation dédié --}}
                                             <flux:button class="w-full" icon="trash" variant="danger"
-                                                wire:click="deleteClient({{ $client->id }})"
-                                                confirm="Êtes-vous sûr de vouloir supprimer ce client ?">
+                                                wire:click="$dispatch('openModal', { component: 'client.delete-client-confirmation', arguments: { client: {{ $client->id }} }})">
                                                 Supprimer
                                             </flux:button>
                                         @endcan
@@ -202,7 +219,7 @@ new class extends Component {
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" class="text-center py-8 text-sm text-gray-500">
+                            <td colspan="6" class="text-center py-8 text-sm text-gray-500">
                                 Aucun client trouvé.
                             </td>
                         </tr>
@@ -216,4 +233,21 @@ new class extends Component {
             {{ $clients->links() }}
         </div>
     </x-card>
+    {{-- NOUVEAU: Inclure le composant modal de confirmation (si vous l'avez créé) --}}
+    {{-- @livewire('client.delete-client-confirmation') --}}
+
+    <flux:modal name="show-client" class="md:w-96">
+        <div class="space-y-6">
+            <div>
+                <flux:heading size="lg">Update profile</flux:heading>
+                <flux:text class="mt-2">Make changes to your personal details.</flux:text>
+            </div>
+            <flux:input label="Name" placeholder="Your name" />
+            <flux:input label="Date of birth" type="date" />
+            <div class="flex">
+                <flux:spacer />
+                <flux:button type="submit" variant="primary">Save changes</flux:button>
+            </div>
+        </div>
+    </flux:modal>
 </x-layouts.content>
